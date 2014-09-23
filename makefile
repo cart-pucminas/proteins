@@ -11,7 +11,10 @@ export LIBSRCDIR = $(CURDIR)/libsrc
 export SRCDIR    = $(CURDIR)/src
 
 # Libraries.
-export LIBS = libmylibc.a -lm
+export LIBS = $(LIBDIR)/libmylibc.a -lm
+
+# Executable name.
+export EXEC = predictor
 
 # Toolchain.
 export CC = gcc
@@ -21,8 +24,10 @@ export AR = ar
 export OPTIMIZATION = -D NDEBUG -O3
 export CFLAGS = -I $(INCDIR) -ansi -pedantic -Wall -Wextra -Werror
 
+
 # Builds everything.
 all: libraries
+	cd $(SRCDIR) && $(MAKE) all
 
 # Builds libraries.
 libraries:
