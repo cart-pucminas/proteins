@@ -12,7 +12,7 @@
 
        float* selectFeature(float* dataBaseNormalized, ); //seleciona da base de dados o conjunto de caracteristicas 
        float* discreteCossineTransform(float* selectedData);
-       float supportVectorMachine(float* transformedBase)
+       float supportVectorMachine(float* transformedBase, float C, float gamma)
        
        /* suppot vector machine
        
