@@ -9,3 +9,5 @@
 bin/*
 lib/*
 include/mylibc/*
+*.t
+*.t.predict
