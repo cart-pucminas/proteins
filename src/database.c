@@ -28,13 +28,14 @@
  * @details Parses the database so that we can determine the largest number of
  *          amino acids for all proteins.
  *
- * @param files Input files.
- * @nproteins   Number of proteins (number of input files).
- * @nfeatures   Number of features for all proteins.
+ * @param filenames Name of input files.
+ * @nproteins       Number of proteins (number of input files).
+ * @nfeatures       Number of features for all proteins.
  *
  * @returns The largest number of amino acids for all proteins.
  */
-unsigned database_parse(FILE **files, unsigned nproteins, unsigned nfeatures)
+unsigned database_parse(const char *filenames, unsigned nproteins, 
+															unsigned nfeatures)
 {
 	unsigned naminoacids;
 
@@ -46,9 +47,13 @@ unsigned database_parse(FILE **files, unsigned nproteins, unsigned nfeatures)
 	naminoacids = 0;
 
 	/* Find largest number of amino acids for all proteins. */
-	for (unsigned i = 0; i < nproteins; i++)
+	for (unsigned wprotein = 0; wprotein < nproteins; wprotein++)
 	{
-		fseek(files[i], 0, SEEK_SET);
+		FILE *wfile;
+		
+		wfile = fopen(filenames[wprotein], "r");
+		if (file != NULL)
+			error ("cannot open input file");
 
 		char ch;    /* Working character. */
 		unsigned x; /* Accumulator.       */
@@ -56,7 +61,7 @@ unsigned database_parse(FILE **files, unsigned nproteins, unsigned nfeatures)
 		x = 0;
 
 		/* Get number of aminoacids. */
-		while ((ch = getc(files[i])) != EOF)
+		while ((ch = getc(wfile[wprotein])) != EOF)
 		{
 			if (ch == '\n')
 				x++;
@@ -65,6 +70,8 @@ unsigned database_parse(FILE **files, unsigned nproteins, unsigned nfeatures)
 		/* Largest number of amino acids found*/
 		if (naminoacids < x)
 			x = naminoacids;
+		
+		fclose(wfile);
 	}
 
 	return (naminoacids);
@@ -76,19 +83,20 @@ unsigned database_parse(FILE **files, unsigned nproteins, unsigned nfeatures)
  *
  * @details Reads the database into memory so we can speedup computation.
  *
- * @param files       Input files.
+ * @param filenames   Name of input files.
  * @param nproteins   Number of proteins (number of input files).
  * @param nfeatures   Number of features for all proteins.
  * @param naminoacids Largest number of amino acids for all proteins.
  *
  * @returns The database.
  */
-float **database_read(FILE **files, unsigned nproteins, unsigned nfeatures, unsigned naminoacids)
+float **database_read(const char *filenames, unsigned nproteins,
+									  unsigned nfeatures, unsigned naminoacids)
 {
 	float **database;
 
 	/* Sanity check. */
-	assert(files != NULL);
+	assert(filenames != NULL);
 	assert(nproteins != 0);
 	assert(nfeatures != 0);
 	assert(naminoacids != 0);
@@ -104,13 +112,16 @@ float **database_read(FILE **files, unsigned nproteins, unsigned nfeatures, unsi
 		char *line;          /* Working line.        */
 		unsigned waminoacid; /* Current namino acid. */
 		unsigned base;       /* waminoacid*nproteins */
+		FILE *wfile;         /* Working file.        */
 
-		fseek(files[wprotein], 0, SEEK_SET);
+		wfile = fopen(filenames[wprotein], "r");
+		if (file != NULL)
+			error ("cannot open input file");
 		
 		/* Read file. */
 		waminoacid = 0;
 		base = waminoacid*nproteins;
-		while ((line = readline(files[wprotein])) != NULL)
+		while ((line = readline(wfile[wprotein])) != NULL)
 		{
 			unsigned wfeature;
 
@@ -129,6 +140,8 @@ float **database_read(FILE **files, unsigned nproteins, unsigned nfeatures, unsi
 			waminoacid++;
 			free(line);
 		}
+		
+		fclose(wfile);
 	}
 
 	return (database);
