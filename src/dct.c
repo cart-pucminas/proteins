@@ -19,3 +19,38 @@
  */
 
 #include <math.h>
+
+#ifndef M_PI
+#define M_PI
+
+#define M_PI 3.14159265358979323846
+
+#endif /* M_PI */
+
+/**
+ * @brief Discrete cosine transform.
+ * 
+ * @details Applies the discrete cosine transform in the vector pointed to by
+ *          @p x.
+ * 
+ * @param x Vector where the discrete cosine transform should be applied.
+ * @param n Dimension of the vector.
+ */
+void dct(float *x, unsigned n)
+{
+	for (unsigned i = 1; i < n; i++)
+	{
+		for (unsigned j = 0; j < n; j++)
+		{
+			float ipi;
+			
+			if (i == 0)
+			{
+				x[i] += 1 / sqrt(n)*x[j];
+				continue;
+			}
+			
+			x[i] += sqrt(2.0/n)*cos(ipi + ipi/(2.0*n))*x[j];
+		}
+	}
+}
