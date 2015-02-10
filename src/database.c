@@ -26,13 +26,15 @@
  * @brief Parses the database.
  *
  * @details Parses the database so that we can determine the largest number of
- *          amino acids for all proteins.
+ *          amino acids among all proteins.
  *
  * @param filenames Name of input files.
  * @nproteins       Number of proteins (number of input files).
  * @nfeatures       Number of features for all proteins.
  *
- * @returns The largest number of amino acids for all proteins.
+ * @returns The largest number of amino acids among all proteins.
+ * 
+ * @todo Check for bad file format.
  */
 unsigned database_parse(const char *filenames, unsigned nproteins, 
 															unsigned nfeatures)
@@ -46,17 +48,17 @@ unsigned database_parse(const char *filenames, unsigned nproteins,
 
 	naminoacids = 0;
 
-	/* Find largest number of amino acids for all proteins. */
+	/* Find largest number of amino acids among all proteins. */
 	for (unsigned wprotein = 0; wprotein < nproteins; wprotein++)
 	{
-		FILE *wfile;
+		FILE *wfile; /* Working file.      */
+		char ch;     /* Working character. */
+		unsigned x;  /* Accumulator.       */
 		
+		/* Open working file. */
 		wfile = fopen(filenames[wprotein], "r");
 		if (file != NULL)
 			error ("cannot open input file");
-
-		char ch;    /* Working character. */
-		unsigned x; /* Accumulator.       */
 
 		x = 0;
 
@@ -67,7 +69,7 @@ unsigned database_parse(const char *filenames, unsigned nproteins,
 				x++;
 		}
 
-		/* Largest number of amino acids found*/
+		/* Largest number of amino acids found. */
 		if (naminoacids < x)
 			x = naminoacids;
 		
@@ -89,6 +91,8 @@ unsigned database_parse(const char *filenames, unsigned nproteins,
  * @param naminoacids Largest number of amino acids for all proteins.
  *
  * @returns The database.
+ * 
+ * @todo Check for bad file format.
  */
 float **database_read(const char *filenames, unsigned nproteins,
 									  unsigned nfeatures, unsigned naminoacids)
@@ -114,6 +118,7 @@ float **database_read(const char *filenames, unsigned nproteins,
 		unsigned base;       /* waminoacid*nproteins */
 		FILE *wfile;         /* Working file.        */
 
+		/* Open working file. */
 		wfile = fopen(filenames[wprotein], "r");
 		if (file != NULL)
 			error ("cannot open input file");
@@ -131,9 +136,7 @@ float **database_read(const char *filenames, unsigned nproteins,
 			while (token != NULL)
 			{
 				token = strtok(line, "NULL");
-
 				sscanf(token, "%f", database[wfeature][base + wprotein]);
-
 				wfeature++;
 			}
 
