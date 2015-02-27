@@ -36,8 +36,8 @@
  * 
  * @todo Check for bad file format.
  */
-unsigned database_parse(const char *filenames, unsigned nproteins, 
-															unsigned nfeatures)
+unsigned database_parse
+(const char *filenames, unsigned nproteins, unsigned nfeatures)
 {
 	unsigned naminoacids;
 
@@ -94,8 +94,8 @@ unsigned database_parse(const char *filenames, unsigned nproteins,
  * 
  * @todo Check for bad file format.
  */
-float **database_read(const char *filenames, unsigned nproteins,
-									  unsigned nfeatures, unsigned naminoacids)
+float **database_read
+(const char *filenames, unsigned nproteins, unsigned nfeatures, unsigned naminoacids)
 {
 	float **database;
 
