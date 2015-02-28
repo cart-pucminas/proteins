@@ -5,11 +5,23 @@
  *                       processor.
  */
 
+#include <assert.h>
 #include <mylibc/ai.h>
 #include <mylibc/graph.h>
 #include <mylibc/matrix.h>
 #include <mylibc/util.h>
 #include <stdlib.h>
+#include "predict.h"
+
+/**
+ * @brief Number of coefficients.
+ */
+#define NCOEFFICIENTS 75
+
+/**
+ * @brief Casts a gene.
+ */
+#define GENE(x) ((unsigned *)(x))
 
 /*============================================================================*
  *                              Genetic Operators                             *
@@ -43,13 +55,56 @@ static void *gene_random(void)
 }
 
 /*
+ * @brief Searches for SVM parameters.
+ */
+static double grid_search(float *feature_matrix)
+{
+	/*
+	 * TODO: call SVM here.
+	 */
+}
+
+/*
  * Evaluates the fitness of a gene.
  */
 static double gene_evaluate(void *gene)
 {
-	((void)gene); /* Unused. */
+	float accuracy;        /* Fitness value.  */
+	float *feature_matrix; /* Feature matrix. */
 	
-	return (0);
+	/* Sanity check. */
+	assert(gene != NULL);
+	
+	feature_matrix = smalloc(NCOEFFICIENTS*nproteins*sizeof(float));
+	
+	/* Build feature matrix. */
+	for (unsigned wprotein = 0; wprotein < nproteins; wprotein++)
+	{
+		float *data;    
+		float *protein;
+		
+		protein = 
+			smalloc(nselected*database.naminoacids[wprotein]*sizeof(float));
+		
+		for (unsigned i = 0; i < nselected; i++)
+		{
+			data = database.data[GENE(i)][wprotein*database.maxaminoacids];
+			memcpy(protein, data, database.naminoacids[wprotein]*sizeof(float));
+		}
+		
+		dct(protein, database.naminoacids[wprotein]);
+		
+		memcpy(&feature_matrix[wprotein*NCOEFFICIENTS], protein,
+												NCOEFFICIENTS*sizeof(float));
+		
+		free(protein);
+	}
+	
+	accuracy = grid_search(feature_matrix);
+	
+	free(feature_matrix);
+	
+	return (accuracy);
 }
 
 /*
