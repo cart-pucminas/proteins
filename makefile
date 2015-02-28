@@ -22,7 +22,7 @@ export AR = ar
 
 # Toolchain configuration.
 export OPTIMIZATION = -D NDEBUG -O3
-export CFLAGS = -I $(INCDIR) -ansi -pedantic -Wall -Wextra -Werror
+export CFLAGS = -I $(INCDIR) -ansi -pedantic -Wall -Wextra -Werror -stc=c99
 
 
 # Builds everything.
