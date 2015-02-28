@@ -60,6 +60,10 @@ void database_parse
 		wfile = fopen(filenames[wprotein], "r");
 		if (file != NULL)
 			error ("cannot open input file");
+		
+		/* Skip first line. */
+		while ((ch = getc(wfile) != '\n'))
+			/* noop. */;
 
 		/* Get number of aminoacids. */
 		database.naminoacids[wprotein] = 0;
@@ -141,6 +145,7 @@ float **database_read
 
 	/* Allocate database. */
 	database.nproteins = nproteins;
+	database.labels = smalloc(nproteins*sizeof(unsigned));
 	database.data = smalloc(nfeatures*sizeof(float *));
 	width = database.maxaminoacids*nproteins;
 	for (unsigned i = 0; i < nfeatures; i++)
@@ -158,7 +163,12 @@ float **database_read
 		if (file != NULL)
 			error ("cannot open input file");
 		
-		/* Read file. */
+		/* Read label. */
+		line = readline(wfile);
+		sscanf(line, "%u", %database.labels[wprotein]);
+		free(line);
+		
+		/* Read amino acid. */
 		waminoacid = 0;
 		while ((line = readline(wfile)) != NULL)
 		{
@@ -171,7 +181,7 @@ float **database_read
 			{
 				token = strtok(line, "NULL");
 				sscanf(token, "%f", 
-					database.data[wfeature][waminoacid*nproteins + wprotein]);
+					&database.data[wfeature][waminoacid*nproteins + wprotein]);
 				wfeature++;
 			}
 
@@ -190,6 +200,7 @@ float **database_read
  */
 void database_destroy(void)
 {
+	free(database.labels);
 	free(database.naminoacids);
 	for (unsigned i = 0; i < nfeatures; i++)
 		free(database.data[i]);
