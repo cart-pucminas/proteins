@@ -1,5 +1,6 @@
 /*
- * Copyright(C) 2011-2014 Pedro H. Penna <pedrohenriquepenna@gmail.com>
+ * Copyright(C) 2015 Pedro H. Penna <pedrohenriquepenna@gmail.com>
+ *                   Larissa Leijoto <larissa.leijoto@gmail.com>
  *
  * This file is part of Predict.
  *
