@@ -27,7 +27,8 @@
 	{
 		float **data;           /**< Data.                                   */
 		unsigned maxaminoacids; /**< Number of amino acids.                  */
-		unsigned *naminoacids;  /**< NUmber of amino acids for each protein. */
+		unsigned *naminoacids;  /**< Number of amino acids for each protein. */
+		unsigned *nproteins;    /**< Number of proteins.                     */
 	} database;
 
 #endif /* PREDICT_H_ */

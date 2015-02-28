@@ -80,6 +80,39 @@ void database_parse
 		error("invalid number of amino acids");
 }
 
+/**
+ * @brief Transposes the database.
+ * 
+ * @details Transposes the database, so that the data tables will be
+ *          maxaminoacids x nproteins.
+ */
+static void database_transpose(void)
+{
+	float *data;      /* Original data table.  */
+	float *transpose; /* Transpose data table. */
+	
+	/* Transpose database. */
+	for (unsigned wfeature = 0; wfeature < nfeatures; wfeature++)
+	{
+		/* Transpose data tables. */
+		for (unsigned i = 0; i < database.maxaminoacids; i++)
+		{
+			data = database.data[wfeature];
+			transpose = 
+			smalloc(database.maxaminoacids*database.nproteins*sizeof(unsigned));
+			
+			for (unsigned j = 0; j < nproteins; j++)
+			{
+				transpose[j*database.maxaminoacids + i] = 
+												data[i*database.nproteins + j];
+			}
+			
+			database.data[wfeature] = transpose;
+			free(data);
+		}
+	}
+}
+
 
 /**
  * @brief Reads the database into memory.
@@ -106,6 +139,7 @@ float **database_read
 	assert(nfeatures != 0);
 
 	/* Allocate database. */
+	database.nproteins = nproteins;
 	database.data = smalloc(nfeatures*sizeof(float *));
 	width = database.maxaminoacids*nproteins;
 	for (unsigned i = 0; i < nfeatures; i++)
@@ -136,7 +170,7 @@ float **database_read
 			{
 				token = strtok(line, "NULL");
 				sscanf(token, "%f", 
-					database.data[wfeature][nproteins*waminoacid + wprotein]);
+					database.data[wfeature][waminoacid*nproteins + wprotein]);
 				wfeature++;
 			}
 
