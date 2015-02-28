@@ -47,6 +47,7 @@ void database_parse
 	assert(nfeatures != 0);
 
 	database.maxaminoacids = 0;
+	database.naminoacids = smalloc(nproteins*sizeof(unsigned));
 
 	/* Find largest number of amino acids among all proteins. */
 	for (unsigned wprotein = 0; wprotein < nproteins; wprotein++)
