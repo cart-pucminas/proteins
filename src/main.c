@@ -21,11 +21,23 @@
 #include <mylib/util.h>
 #include <stdio.h>
 #include <stdlib.h>
+	
 
 /* Program parameters. */
 static const char *filenames = NULL; /* Name of input files.              */
 static unsigned nproteins = 0;       /* Number of proteins (input files). */
 static unsigned nfeatures = 0;       /* Number of features.               */
+static unsigned nselected = 0;       /* Number of selected features.      */
+
+/**
+ * @brief Database.
+ */
+struct 
+{
+	float **data;           /**< Data.                                   */
+	unsigned maxaminoacids; /**< Number of amino acids.                  */
+	unsigned *naminoacids;  /**< NUmber of amino acids for each protein. */
+} database;
 
 /* Forward declarations. */
 extern void predict(int popsize, int ngen);
@@ -37,7 +49,7 @@ extern void predict(int popsize, int ngen);
  */
 static void usage(void)
 {
-	printf("Usage: proteins <nfeatures> <input files>");
+	printf("Usage: proteins <nfeatures> <input files> <nselected>");
 	exit(EXIT_SUCCESS);
 }
 
@@ -54,7 +66,7 @@ static void readargs(int argc, char **argv)
 	((void)argv); /* Unused. */
 	
 	/* Missing arguments. */
-	if (argc < 3)
+	if (argc < 4)
 		error("missing arguments");
 	
 	/*
@@ -65,32 +77,31 @@ static void readargs(int argc, char **argv)
 	/* Assert program parameters. */
 	if (nproteins == 0)
 		error("invalid number of proteins");
-	else if (nfeatures == 0);
+	else if (nfeatures == 0)
 		error("invalid number of features");
+	else if (nselected == 0)
+		error("invalid number of selected of features");
 }
 
 int main(int argc, char **argv)
 {
-	unsigned naminoacids; /* Number of amino acids. */
-	float **database;     /* Data base.             */
-	
 	readargs(argc, argv);
+	
+	database.naminoacids = smalloc(nproteins*sizeof(unsigned));
 	
 	/*
 	 * Parse database in order to determine the largest
 	 * number of amino acids among all proteins.
 	 */
-	naminoacids = database_parse(filename, nproteins, nfeatures);
-	if (naminoacids == 0)
-		error("invalid number of amino acids");
+	database_parse(filename, nproteins, nfeatures);
 	
 	/* Read database. */
-	database = database_read(filenames, nproteins, nfeatures, naminoacids);
+	database_read(filenames, nproteins, nfeatures);
 	
 	predict(100, 100);
 	
 	/* House keeping. */
-	free(database);
+	database_destroy();
 	
 	return (EXIT_SUCCESS);
 }

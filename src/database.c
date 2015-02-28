@@ -20,7 +20,9 @@
 
 #include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <util.h>
+#include "predict.h"
 
 /**
  * @brief Parses the database.
@@ -36,47 +38,46 @@
  * 
  * @todo Check for bad file format.
  */
-unsigned database_parse
+void database_parse
 (const char *filenames, unsigned nproteins, unsigned nfeatures)
 {
-	unsigned naminoacids;
-
 	/* Sanity checks. */
 	assert(files != NULL);
 	assert(nproteins != 0);
 	assert(nfeatures != 0);
 
-	naminoacids = 0;
+	database.maxaminoacids = 0;
 
 	/* Find largest number of amino acids among all proteins. */
 	for (unsigned wprotein = 0; wprotein < nproteins; wprotein++)
 	{
-		FILE *wfile; /* Working file.      */
 		char ch;     /* Working character. */
 		unsigned x;  /* Accumulator.       */
+		FILE *wfile; /* Working file.      */
 		
 		/* Open working file. */
 		wfile = fopen(filenames[wprotein], "r");
 		if (file != NULL)
 			error ("cannot open input file");
 
-		x = 0;
-
 		/* Get number of aminoacids. */
-		while ((ch = getc(wfile[wprotein])) != EOF)
+		database.naminoacids[wprotein] = 0;
+		while ((ch = getc(wfile)) != EOF)
 		{
 			if (ch == '\n')
-				x++;
+				database.naminoacids[wprotein]++;
 		}
 
 		/* Largest number of amino acids found. */
-		if (naminoacids < x)
-			x = naminoacids;
+		if (database.maxaminoacids < database.naminoacids[wprotein])
+			database.maxaminoacids = database.naminoacids[wprotein];
 		
 		fclose(wfile);
 	}
-
-	return (naminoacids);
+	
+	/* Invalid number of amino acids. */
+	if (database.maxaminoacids == 0)
+		error("invalid number of amino acids");
 }
 
 
@@ -95,20 +96,20 @@ unsigned database_parse
  * @todo Check for bad file format.
  */
 float **database_read
-(const char *filenames, unsigned nproteins, unsigned nfeatures, unsigned naminoacids)
+(const char *filenames, unsigned nproteins, unsigned nfeatures)
 {
-	float **database;
-
+	unsigned width;
+	
 	/* Sanity check. */
 	assert(filenames != NULL);
 	assert(nproteins != 0);
 	assert(nfeatures != 0);
-	assert(naminoacids != 0);
 
 	/* Allocate database. */
-	database = smalloc(nfeatures*sizeof(float *));
+	database.data = smalloc(nfeatures*sizeof(float *));
+	width = database.maxaminoacids*nproteins;
 	for (unsigned i = 0; i < nfeatures; i++)
-		database[i] = smalloc(naminoacids*nproteins*sizeof(float));
+		database.data[i] = smalloc(width*sizeof(float));
 
 	/* Read database. */
 	for (unsigned wprotein = 0; wprotein < nproteins; wprotein++)
@@ -126,7 +127,7 @@ float **database_read
 		/* Read file. */
 		waminoacid = 0;
 		base = waminoacid*nproteins;
-		while ((line = readline(wfile[wprotein])) != NULL)
+		while ((line = readline(wfile)) != NULL)
 		{
 			unsigned wfeature;
 
@@ -136,7 +137,7 @@ float **database_read
 			while (token != NULL)
 			{
 				token = strtok(line, "NULL");
-				sscanf(token, "%f", database[wfeature][base + wprotein]);
+				sscanf(token, "%f", database.data[wfeature][base + wprotein]);
 				wfeature++;
 			}
 
@@ -146,7 +147,17 @@ float **database_read
 		
 		fclose(wfile);
 	}
-
-	return (database);
 }
 
+/**
+ * @brief Destroys the database.
+ * 
+ * @details Destroys the database, freeing underlying resources.
+ */
+void database_destroy(void)
+{
+	free(database.naminoacids);
+	for (unsigned i = 0; i < nfeatures; i++)
+		free(database.data[i]);
+	free(database.data);
+}
