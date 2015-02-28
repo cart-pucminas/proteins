@@ -115,8 +115,7 @@ float **database_read
 	for (unsigned wprotein = 0; wprotein < nproteins; wprotein++)
 	{
 		char *line;          /* Working line.        */
-		unsigned waminoacid; /* Current namino acid. */
-		unsigned base;       /* waminoacid*nproteins */
+		unsigned waminoacid; /* Current amino acid. */
 		FILE *wfile;         /* Working file.        */
 
 		/* Open working file. */
@@ -126,7 +125,6 @@ float **database_read
 		
 		/* Read file. */
 		waminoacid = 0;
-		base = waminoacid*nproteins;
 		while ((line = readline(wfile)) != NULL)
 		{
 			unsigned wfeature;
@@ -137,7 +135,8 @@ float **database_read
 			while (token != NULL)
 			{
 				token = strtok(line, "NULL");
-				sscanf(token, "%f", database.data[wfeature][base + wprotein]);
+				sscanf(token, "%f", 
+					database.data[wfeature][nproteins*waminoacid + wprotein]);
 				wfeature++;
 			}
 
