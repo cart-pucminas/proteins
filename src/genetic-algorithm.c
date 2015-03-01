@@ -107,8 +107,7 @@ static double gene_evaluate(void *gene)
 		
 		dct(protein, database.naminoacids[wprotein]);
 		
-		memcpy(&feature_matrix[wprotein*NCOEFFICIENTS], protein,
-												NCOEFFICIENTS*sizeof(float));
+		memcpy(&feature_matrix[wprotein*NCOEFFICIENTS], protein,NCOEFFICIENTS*sizeof(float));
 		
 		free(protein);
 	}
@@ -125,11 +124,41 @@ static double gene_evaluate(void *gene)
  */
 static void *gene_crossover(void *gene1, void *gene2, int n)
 {
-	((void)gene1); /* Unused. */
-	((void)gene2); /* Unused. */
-	((void)n);     /* Unused. */
+	int point1 = rand()%(n - 1);
+	int point2 = rand()%(n - point1 - 1) + point1;
+	int *begin ,*middle, *end;
+	int i,j,k;
+        int Nbegin = point1 , Nmiddle = point2 - point1 , Nend = n -(nbegin+nmiddle) ;
 	
-	return (NULL);
+	memmove(begin,gene1,Nbeing);
+	memmove(middle,gene2+Nbegin,Nmiddle);
+	memmove(end,gene1+(Nbegin-Nmiddle),Nend);
+	
+	for(i = 0; i < Nmiddle; i++){
+		for(j = 0; j < Nbegin; j++)
+			if( middle[i] == begin[j] )
+				for(k = 0; k < n; k++ )
+					if(gene2[k] == begin[j]){
+						begin[j] = gene1[k];
+						break;
+					}
+		for(j = 0; j < Nend; j++)
+			if(middle[i] == end[j])
+				for(k = 0; k < n; k++ )
+					if(gene2[k] == end[j]){
+						end[j] = gene1[k];
+						break;
+					}
+	}
+	int *offspring = new int[n]; 
+	
+	//offspring = begin + middle + end;
+	memcpy(offspring,begin,  Nbegin* sizeof(int)); 
+        memcpy(offspring + Nbegin, middle, Nmiddle* sizeof(int))
+        memcpy(offspring + (Nbegin+Nmiddle), end, Nend* sizeof(int))
+	
+		
+	return offspring;
 }
 
 /*
