@@ -126,9 +126,12 @@ static void *gene_crossover(void *gene1, void *gene2, int n)
 {
 	int point1 = rand()%(n - 1);
 	int point2 = rand()%(n - point1 - 1) + point1;
-	int *begin ,*middle, *end;
 	int i,j,k;
         int Nbegin = point1 , Nmiddle = point2 - point1 , Nend = n -(nbegin+nmiddle) ;
+	int *begin = smalloc(int,Nbegin);
+	int *middle = smalloc(int,Nmiddle);
+	int *end; = smalloc(int,Nend);
+	
 	
 	memmove(begin,gene1,Nbeing);
 	memmove(middle,gene2+Nbegin,Nmiddle);
@@ -150,7 +153,8 @@ static void *gene_crossover(void *gene1, void *gene2, int n)
 						break;
 					}
 	}
-	int *offspring = new int[n]; 
+
+	int * offspring = smalloc(int, n); 
 	
 	//offspring = begin + middle + end;
 	memcpy(offspring,begin,  Nbegin* sizeof(int)); 
