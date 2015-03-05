@@ -202,9 +202,22 @@ static void *gene_crossover(void *gene1, void *gene2, int n)
  */
 static void *gene_mutation(void *gene)
 {
-	((void)gene); /* Unused. */
-	
-	return (NULL);
+        int i, position;
+	for(i = 0; i < popsize; i++ )
+	{
+	        if( rand() > gene_mutation )
+		{
+		    srand((unsigned)time(NULL));
+                    int number = rand()%325; /*325 is a number of features*/
+		    position = rand()%ngen;
+		    
+			while(isRepeated(gene, number))
+			{
+			        gene[position] = number;
+			}
+		}
+	}
+	return gene;
 }
 
 /*============================================================================*
