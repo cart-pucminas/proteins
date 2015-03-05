@@ -24,7 +24,10 @@
 #include <mylibc/matrix.h>
 #include <mylibc/util.h>
 #include <stdlib.h>
+#include <time.h>
+#include <cmath> 
 #include "predict.h"
+
 
 /**
  * @brief Number of coefficients.
@@ -45,7 +48,20 @@
  */
 static int *gene_create(void)
 {
-	return (NULL);
+    srand((unsigned)time(NULL));
+    
+    int number = rand()%325; /*325 is a number of features*/
+    int i;    
+    int *individual = smalloc(int,ngen);
+    
+    for(i = 0; i < ngen; i++)
+    {
+        while(isRepeated(individual, number))
+        {
+               individual[i] = number;
+        }
+    }
+	return (individual);
 }
 
 /*
@@ -72,9 +88,25 @@ static void *gene_random(void)
  */
 static double grid_search(float *feature_matrix)
 {
-	/*
-	 * TODO: call SVM here.
-	 */
+	double Acc = 0, gamma = 0, cost = 0;
+	double bestAcc = 0, bestg = 0, bestc = 0;
+	int step = 2;
+	
+        for (cost = -5; cost < 15; cost = cost + step)
+        {
+                for(gamma = 3; gamma > -15, gamma = gamma - step)
+                {
+                         gamma = pow(2,gamma);
+                         cost = pow(2, cost);
+                         best = svm(feature_matrix, NCOEFFICIENTS, nproteins, gamma, cost);
+                         if (Acc >= bestAcc)
+                         {
+                             bestAcc = cv; 
+                             bestc = cost; 
+                             bestg = gamma;
+                         }
+                }
+        }
 }
 
 /*
