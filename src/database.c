@@ -55,7 +55,6 @@ void database_parse
 	for (unsigned wprotein = 0; wprotein < nproteins; wprotein++)
 	{
 		char ch;     /* Working character. */
-		unsigned x;  /* Accumulator.       */
 		FILE *wfile; /* Working file.      */
 		
 		/* Open working file. */
@@ -134,7 +133,7 @@ static void database_transpose(void)
  * 
  * @todo Check for bad file format.
  */
-float **database_read
+void database_read
 (const char **filenames, unsigned nproteins, unsigned nfeatures)
 {
 	unsigned width;
@@ -193,6 +192,8 @@ float **database_read
 		
 		fclose(wfile);
 	}
+	
+	database_transpose();
 }
 
 /**

@@ -57,7 +57,10 @@
 	 */
 	extern char seteol(char c);
 	
-	extern void *smalloc(size_t);
+	/*
+	 * Safe malloc().
+	 */
+	extern void *smalloc(size_t size);
 	
 	/*
 	 * Sets a seed value for the random number generator.
