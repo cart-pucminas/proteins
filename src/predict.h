@@ -29,7 +29,7 @@
 		float **data;           /**< Data.                                   */
 		unsigned maxaminoacids; /**< Number of amino acids.                  */
 		unsigned *naminoacids;  /**< Number of amino acids for each protein. */
-		unsigned *nproteins;    /**< Number of proteins.                     */
+		unsigned nproteins;     /**< Number of proteins.                     */
 		unsigned *labels;       /**< Protein labels.                         */
 	} database;
 	

@@ -21,8 +21,9 @@
 
 #include <assert.h>
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
-#include <util.h>
+#include <mylibc/util.h>
 #include "predict.h"
 
 /**
@@ -40,10 +41,10 @@
  * @todo Check for bad file format.
  */
 void database_parse
-(const char *filenames, unsigned nproteins, unsigned nfeatures)
+(const char **filenames, unsigned nproteins, unsigned nfeatures)
 {
 	/* Sanity checks. */
-	assert(files != NULL);
+	assert(filenames != NULL);
 	assert(nproteins != 0);
 	assert(nfeatures != 0);
 
@@ -59,7 +60,7 @@ void database_parse
 		
 		/* Open working file. */
 		wfile = fopen(filenames[wprotein], "r");
-		if (file != NULL)
+		if (wfile != NULL)
 			error ("cannot open input file");
 		
 		/* Skip first line. */
@@ -105,12 +106,12 @@ static void database_transpose(void)
 		{
 			data = database.data[wfeature];
 			transpose = 
-			smalloc(database.maxaminoacids*database.nproteins*sizeof(unsigned));
+			smalloc(database.maxaminoacids*nproteins*sizeof(unsigned));
 			
 			for (unsigned j = 0; j < nproteins; j++)
 			{
-				transpose[j*database.maxaminoacids + i] = 
-												data[i*database.nproteins + j];
+				transpose[j*database.maxaminoacids + i] =
+					data[i*database.nproteins + j];
 			}
 			
 			database.data[wfeature] = transpose;
@@ -118,7 +119,6 @@ static void database_transpose(void)
 		}
 	}
 }
-
 
 /**
  * @brief Reads the database into memory.
@@ -135,7 +135,7 @@ static void database_transpose(void)
  * @todo Check for bad file format.
  */
 float **database_read
-(const char *filenames, unsigned nproteins, unsigned nfeatures)
+(const char **filenames, unsigned nproteins, unsigned nfeatures)
 {
 	unsigned width;
 	
@@ -161,7 +161,7 @@ float **database_read
 
 		/* Open working file. */
 		wfile = fopen(filenames[wprotein], "r");
-		if (file != NULL)
+		if (wfile != NULL)
 			error ("cannot open input file");
 		
 		/* Read label. */
@@ -173,7 +173,8 @@ float **database_read
 		waminoacid = 0;
 		while ((line = readline(wfile)) != NULL)
 		{
-			unsigned wfeature;
+			char *token;       /* Working token.   */
+			unsigned wfeature; /* Working feature. */
 
 			/* Read line. */
 			wfeature = 0;
