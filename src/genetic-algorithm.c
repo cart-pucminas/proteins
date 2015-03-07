@@ -132,8 +132,6 @@ static void *gene_random(void)
 
 /**
  * @brief Searches for SVM parameters.
- * 
- * @todo Pass labels correctly to the SVM.
  */
 static double grid_search(float *feature_matrix, double *bestg, double *bestc)
 {
@@ -164,7 +162,13 @@ static double grid_search(float *feature_matrix, double *bestg, double *bestc)
 			gamma2 = pow(2,gamma);
 			cost2 = pow(2, cost);
 
-			acc = svm(NULL, feature_matrix, NCOEFFICIENTS, nproteins, gamma2, cost2);
+			acc =
+				svm(database.labels,
+					feature_matrix,
+					NCOEFFICIENTS,
+					nproteins,
+					gamma2,
+					cost2);
 			
 			/* Best arameters found. */
 			if (acc >= bestacc)

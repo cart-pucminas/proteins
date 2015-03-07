@@ -166,7 +166,7 @@ float **database_read
 		
 		/* Read label. */
 		line = readline(wfile);
-		sscanf(line, "%u", %database.labels[wprotein]);
+		sscanf(line, "%u", &database.labels[wprotein]);
 		free(line);
 		
 		/* Read amino acid. */
