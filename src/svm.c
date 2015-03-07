@@ -23,42 +23,44 @@
 #include <string.h>
 #include <ctype.h>
 #include <errno.h>
-#include "svm.h"
-#include "util.h"
+#include <libsvm/svm.h>
+#include <mylibc/util.h>
+#include "predict.h"
 
 #define NR_FOLD 10
 
-float do_cross_validation(void)
+
+float do_cross_validation(struct svm_problem *prob, struct svm_parameter *param)
 {
 	float accuracy;
 	int total_correct;
-	double *target = smalloc(double,prob.l);
+	double *target = smalloc(prob->l*sizeof(double));
 
-	svm_cross_validation(&prob, &param, NR_FOLD, target);
+	svm_cross_validation(prob, param, NR_FOLD, target);
 	
 	/* Compute accuracy. */
 	total_correct = 0;
-	for (int i = 0; i < prob.l; i++)
+	for (int i = 0; i < prob->l; i++)
 	{
-		if (target[i] == prob.y[i])
+		if (target[i] == prob->y[i])
 			total_correct++;
 	}
-	accuracy = 100.0*total_correct/prob.l
+	accuracy = 100.0*total_correct/prob->l;
 	
 	free(target);
 	
 	return (accuracy);
 }
 
-void buildProblem(struct svm_problem *prob, struct svm_node *x_space, unsigned ncoeficients)
+void buildProblem(float *data, struct svm_problem *prob, struct svm_node *x_space, unsigned ncoeficients)
 {
 	int j;
 	int max_index;
 	
-	prob->l = nproteins;
-	prob->y = smalloc(double,nproteins);
-	prob->x = smalloc(struct svm_node *,nproteins);
-	x_space = smalloc(struct svm_node,(ncoeficients*nproteins)+nproteins);
+	prob->l = database.nproteins;
+	prob->y = smalloc(nproteins*sizeof(double));
+	prob->x = smalloc(nproteins*sizeof(struct svm_node *));
+	x_space = smalloc(((ncoeficients*nproteins)+nproteins)*sizeof(struct svm_node));
 
 	j = 0;
 	max_index = 0;
@@ -68,7 +70,7 @@ void buildProblem(struct svm_problem *prob, struct svm_node *x_space, unsigned n
 		int inst_max_index;
 		
 		prob->x[i] = &x_space[j];
-		prob->y[i] = label[i];
+		prob->y[i] = database.labels[i];
 		
 		idx = 0;
 		inst_max_index = -1;
@@ -103,7 +105,7 @@ float svm(unsigned *label, float *data, unsigned ncoeficients, unsigned nprotein
 	param.coef0        = 0;
 	param.nu           = 0.5;
 	param.cache_size   = 100;
-	param.C            = C;
+	param.C            = c;
 	param.eps          = 1e-3;
 	param.p            = 0.1;
 	param.shrinking    = 1;
@@ -113,10 +115,10 @@ float svm(unsigned *label, float *data, unsigned ncoeficients, unsigned nprotein
 	param.weight       = NULL;
 	
 	/* Builds the structure*/
-	buildProblem(&prob, x_space, ncoeficients);
+	buildProblem(data, &prob, x_space, ncoeficients);
 	            
 	/* Cross validation. */
-	accuracy = do_cross_validation();
+	accuracy = do_cross_validation(&prob, &param);
 
 	/* House keeping. */
 	svm_destroy_param(&param);
