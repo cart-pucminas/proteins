@@ -25,9 +25,9 @@
 
 /* Program parameters. */
 static const char *filenames = NULL; /* Name of input files.              */
-static unsigned nproteins = 0;       /* Number of proteins (input files). */
-static unsigned nfeatures = 0;       /* Number of features.               */
-static unsigned nselected = 0;       /* Number of selected features.      */
+unsigned nproteins = 0;       /* Number of proteins (input files). */
+unsigned nfeatures = 0;       /* Number of features.               */
+unsigned nselected = 0;       /* Number of selected features.      */
 
 /**
  * @brief Database.

@@ -8,5 +8,4 @@
 *.a
 bin/*
 lib/*
-include/mylibc/*
 *.csv

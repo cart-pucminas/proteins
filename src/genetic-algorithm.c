@@ -24,8 +24,9 @@
 #include <mylibc/matrix.h>
 #include <mylibc/util.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
-#include <cmath> 
+#include <math.h> 
 #include "predict.h"
 
 
@@ -35,90 +36,158 @@
 #define NCOEFFICIENTS 75
 
 /**
+ * @brief Gene.
+ */
+struct gene
+{
+	unsigned *features; /**< Features. */
+	double gamma;       /**< Gamma.    */
+	double cost;        /**< Cost.     */
+	double accuracy;    /**< Accuracy. */
+};
+
+
+/**
  * @brief Casts a gene.
  */
-#define GENE(x) ((unsigned *)(x))
+#define GENE(x) ((struct gene *)(x))
 
 /*============================================================================*
  *                              Genetic Operators                             *
  *============================================================================*/
 
-/*
- * Creates a gene.
+/**
+ * @brief Asserts if a gene has a feature.
+ * 
+ * @returns One if the gene has the feature, and zero otherwise.
  */
-static int *gene_create(void)
+static int has_feature(struct gene *g, unsigned feature)
 {
-    srand((unsigned)time(NULL));
-    
-    int number = rand()%325; /*325 is a number of features*/
-    int i;    
-    int *individual = smalloc(int,ngen);
-    
-    for(i = 0; i < ngen; i++)
-    {
-        while(isRepeated(individual, number))
-        {
-               individual[i] = number;
-        }
-    }
-	return (individual);
+	for (unsigned i = 0; i < nselected; i++)
+	{
+		if (g->features[i] == feature)
+			return (1);
+	}
+	
+	return (0);
 }
 
-/*
- * Destroys a gene.
+/**
+ * @brief Creates a gene.
+ * 
+ * @returns A new gene.
  */
-static void gene_destroy(void *gene)
+static struct gene *gene_create(void)
 {
-	((void)gene); /* Unused. */
+    struct gene *g;
+    
+    g = smalloc(sizeof(struct gene));
+	g->features = scalloc(nselected, sizeof(unsigned));
+	g->gamma = 0;
+	g->cost = 0;
+	g->accuracy = 0;
+
+	return (g);
 }
 
-/*
- * Generates a random gene.
+/**
+ * @brief Destroys a gene.
+ */
+static void gene_destroy(void *g)
+{
+	/* Sanity check. */
+	assert(g != NULL);
+	
+	/* House keeping. */
+	free(GENE(g)->features);
+	free(g);
+}
+
+/**
+ * @brief Generates a random gene.
+ * 
+ * @returns A random gene.
  */
 static void *gene_random(void)
 {
-	/* You may want to use this. */
-	gene_create();
+	struct gene *g;
+    
+    g = gene_create();
+    
+    /* Generate gene. */
+    for (unsigned i = 0; i < nselected; i++)
+    {
+		unsigned feature;
+		
+		do
+		{
+			feature = randnum()%nfeatures + 1;
+		} while (has_feature(g, feature));
+
+		g->features[i] = feature;
+    }
 	
-	return (NULL);
+	return (g);
 }
 
-/*
+/**
  * @brief Searches for SVM parameters.
+ * 
+ * @todo Pass labels correctly to the SVM.
  */
-static double grid_search(float *feature_matrix)
+static double grid_search(float *feature_matrix, double *bestg, double *bestc)
 {
-	double Acc = 0, gamma = 0, cost = 0;
-	double bestAcc = 0, bestg = 0, bestc = 0;
-	int step = 2;
+	/*
+	 * Adjust these
+	 * at your will.
+	 */
+	double step = 2;
 	
-        for (cost = -5; cost < 15; cost = cost + step)
-        {
-                for(gamma = 3; gamma > -15, gamma = gamma - step)
-                {
-                         gamma = pow(2,gamma);
-                         cost = pow(2, cost);
-                         best = svm(feature_matrix, NCOEFFICIENTS, nproteins, gamma, cost);
-                         if (Acc >= bestAcc)
-                         {
-                             bestAcc = cv; 
-                             bestc = cost; 
-                             bestg = gamma;
-                         }
-                }
-        }
-}
-
-/*
- * Evaluates the fitness of a gene.
- */
-static double gene_evaluate(void *gene)
-{
-	float accuracy;        /* Fitness value.  */
-	float *feature_matrix; /* Feature matrix. */
+	double bestacc;
 	
 	/* Sanity check. */
-	assert(gene != NULL);
+	assert(feature_matrix != NULL);
+	assert(bestg != NULL);
+	assert(bestc != NULL);
+	
+	bestacc = 0, *bestg = 0, *bestc = 0;
+	
+	/* Search parameters. */
+	for (double cost = -5; cost < 15; cost = cost + step)
+	{
+		for (double gamma = 3; gamma > -15; gamma = gamma - step)
+		{
+			double acc;    /* Accuracty. */
+			double gamma2; /* 2^gamma.   */
+			double cost2;  /* 2^cost.    */
+			
+			gamma2 = pow(2,gamma);
+			cost2 = pow(2, cost);
+
+			acc = svm(NULL, feature_matrix, NCOEFFICIENTS, nproteins, gamma2, cost2);
+			
+			/* Best arameters found. */
+			if (acc >= bestacc)
+			{
+				bestacc = acc; 
+				*bestc = cost2; 
+				*bestg = gamma2;
+			}
+		}
+	}
+	
+	return (bestacc);
+}
+
+/**
+ * @brief Evaluates the fitness of a gene.
+ */
+static double gene_evaluate(void *g)
+{
+	float *feature_matrix;
+	
+	/* Sanity check. */
+	assert(g != NULL);
 	
 	feature_matrix = smalloc(NCOEFFICIENTS*nproteins*sizeof(float));
 	
@@ -133,7 +202,7 @@ static double gene_evaluate(void *gene)
 		
 		for (unsigned i = 0; i < nselected; i++)
 		{
-			data = database.data[GENE(i)][wprotein*database.maxaminoacids];
+			data = &database.data[i][wprotein*database.maxaminoacids];
 			memcpy(protein, data, database.naminoacids[wprotein]*sizeof(float));
 		}
 		
@@ -144,80 +213,122 @@ static double gene_evaluate(void *gene)
 		free(protein);
 	}
 	
-	accuracy = grid_search(feature_matrix);
+	GENE(g)->accuracy =
+		grid_search(feature_matrix, &GENE(g)->gamma, &GENE(g)->cost);
 	
 	free(feature_matrix);
 	
-	return (accuracy);
+	return (GENE(g)->accuracy);
 }
 
-/*
- * Crossovers two genes.
+/**
+ * @brief Crossovers two genes.
+ * 
+ * @param gene1 First gene.
+ * @param gene2 Second gene.
+ * @param n     Child number.
  */
 static void *gene_crossover(void *gene1, void *gene2, int n)
 {
-	int point1 = rand()%(n - 1);
-	int point2 = rand()%(n - point1 - 1) + point1;
-	int i,j,k;
-        int Nbegin = point1 , Nmiddle = point2 - point1 , Nend = n -(nbegin+nmiddle) ;
-	int *begin = smalloc(int,Nbegin);
-	int *middle = smalloc(int,Nmiddle);
-	int *end; = smalloc(int,Nend);
+	unsigned point1;                /* First crossover point.   */
+	unsigned point2;                /* Second crsossover point. */
+	unsigned nbegin, nmiddle, nend; /* Size of gene parts.      */
+	unsigned *begin, *middle, *end; /* Gene parts.              */
+	struct gene *offspring;         /* Offspring.               */
 	
+	/* Sanity check. */
+	assert(gene1 != NULL);
+	assert(gene2 != NULL);
+	assert(n >= 0);
 	
-	memmove(begin,gene1,Nbeing);
-	memmove(middle,gene2+Nbegin,Nmiddle);
-	memmove(end,gene1+(Nbegin-Nmiddle),Nend);
+	offspring = gene_create();
 	
-	for(i = 0; i < Nmiddle; i++){
-		for(j = 0; j < Nbegin; j++)
-			if( middle[i] == begin[j] )
-				for(k = 0; k < n; k++ )
-					if(gene2[k] == begin[j]){
-						begin[j] = gene1[k];
-						break;
-					}
-		for(j = 0; j < Nend; j++)
-			if(middle[i] == end[j])
-				for(k = 0; k < n; k++ )
-					if(gene2[k] == end[j]){
-						end[j] = gene1[k];
-						break;
-					}
-	}
-
-	int * offspring = smalloc(int, n); 
+	/* Crossover points. */
+	point1 = randnum()%(n - 1);
+	point2 = randnum()%(n - point1 - 1) + point1;
 	
-	//offspring = begin + middle + end;
-	memcpy(offspring,begin,  Nbegin* sizeof(int)); 
-        memcpy(offspring + Nbegin, middle, Nmiddle* sizeof(int))
-        memcpy(offspring + (Nbegin+Nmiddle), end, Nend* sizeof(int))
+	/* Size of gene parts. */
+	nbegin = point1;
+	nmiddle = point2 - point1;
+	nend = n -(nbegin+nmiddle);
 	
-		
-	return offspring;
-}
-
-/*
- * Mutates a gene.
- */
-static void *gene_mutation(void *gene)
-{
-        int i, position;
-	for(i = 0; i < popsize; i++ )
+	/* Gene parts. */
+	begin = smalloc(nbegin*sizeof(unsigned));
+	middle = smalloc(nmiddle*sizeof(unsigned));
+	end = smalloc(nend*sizeof(unsigned));
+	
+	memcpy(begin, GENE(gene1)->features, nbegin*sizeof(unsigned));
+	memcpy(middle, GENE(gene2)->features + nbegin, nmiddle*sizeof(unsigned));
+	memcpy(end, GENE(gene1)->features + (nbegin - nmiddle), nend*sizeof(unsigned));
+	
+	for (unsigned i = 0; i < nmiddle; i++)
 	{
-	        if( rand() > gene_mutation )
+		for (unsigned j = 0; j < nbegin; j++)
 		{
-		    srand((unsigned)time(NULL));
-                    int number = rand()%325; /*325 is a number of features*/
-		    position = rand()%ngen;
-		    
-			while(isRepeated(gene, number))
+			if (middle[i] == begin[j] )
 			{
-			        gene[position] = number;
+				for (unsigned k = 0; k < n; k++ )
+				{
+					if (GENE(gene2)->features[k] == begin[j])
+					{
+						begin[j] = GENE(gene1)->features[k];
+						break;
+					}
+				}
+			}
+		}
+		
+		for (unsigned j = 0; j < nend; j++)
+		{
+			if (middle[i] == end[j])
+			{
+				for (unsigned k = 0; k < n; k++ )
+				{
+					if (GENE(gene2)->features[k] == end[j])
+					{
+						end[j] = GENE(gene1)->features[k];
+						break;
+					}
+				}
 			}
 		}
 	}
-	return gene;
+
+	memcpy(offspring->features, begin, nbegin*sizeof(unsigned)); 
+	memcpy(offspring->features + nbegin, middle, nmiddle*sizeof(unsigned));
+	memcpy(offspring->features + nbegin + nmiddle, end, nend*sizeof(unsigned));
+	
+	/* House keeping. */
+	free(begin);
+	free(middle);
+	free(end);
+
+	return (offspring);
+}
+
+/**
+ * @brief Mutates a gene.
+ * 
+ * @returns The mutated gene.
+ */
+static void *gene_mutation(void *g)
+{
+	unsigned i;       /* Mutation point. */
+	unsigned feature; /* Feature.        */
+	
+	/* Sanity check. */
+	assert(g != NULL);
+	
+	i = randnum()%nselected;
+	
+	do
+	{
+		feature = randnum()%nfeatures + 1;
+	} while (has_feature(g, feature));
+
+	GENE(g)->features[i] = feature;
+		
+	return (g);
 }
 
 /*============================================================================*

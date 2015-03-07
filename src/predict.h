@@ -32,5 +32,14 @@
 		unsigned *nproteins;    /**< Number of proteins.                     */
 		unsigned *labels;       /**< Protein labels.                         */
 	} database;
+	
+	/* Forward definitions. */
+	extern float svm(unsigned *, float *, unsigned, unsigned, float, float);
+	extern void dct(float *, unsigned);
+	
+	/* Forward definitions. */
+	extern unsigned nproteins;
+	extern unsigned nfeatures;
+	extern unsigned nselected;
 
 #endif /* PREDICT_H_ */
