@@ -30,7 +30,7 @@
 #define NR_FOLD 10
 
 
-float do_cross_validation(struct svm_problem *prob, struct svm_parameter *param)
+static float do_cross_validation(struct svm_problem *prob, struct svm_parameter *param)
 {
 	float accuracy;
 	int total_correct;
@@ -52,25 +52,25 @@ float do_cross_validation(struct svm_problem *prob, struct svm_parameter *param)
 	return (accuracy);
 }
 
-void buildProblem(float *data, struct svm_problem *prob, struct svm_node *x_space, unsigned ncoeficients)
+static void buildProblem(unsigned *labels, unsigned nproteins, float *data, struct svm_problem *prob, struct svm_node *x_space, unsigned ncoeficients)
 {
 	int j;
 	int max_index;
 	
-	prob->l = database.nproteins;
+	prob->l = nproteins;
 	prob->y = smalloc(nproteins*sizeof(double));
 	prob->x = smalloc(nproteins*sizeof(struct svm_node *));
 	x_space = smalloc(((ncoeficients*nproteins)+nproteins)*sizeof(struct svm_node));
 
 	j = 0;
 	max_index = 0;
-	for (unsigned i = 0; i < database.nproteins; i++)
+	for (unsigned i = 0; i < nproteins; i++)
 	{	   
 		int idx;     
 		int inst_max_index;
 		
 		prob->x[i] = &x_space[j];
-		prob->y[i] = database.labels[i];
+		prob->y[i] = labels[i];
 		
 		idx = 0;
 		inst_max_index = -1;
@@ -90,7 +90,7 @@ void buildProblem(float *data, struct svm_problem *prob, struct svm_node *x_spac
 	}
 }
 
-float svm(unsigned *label, float *data, unsigned ncoeficients, unsigned nproteins, float c, float gamma)
+float svm(unsigned *labels, float *data, unsigned ncoeficients, unsigned nproteins, float c, float gamma)
 {
 	float accuracy;
 	struct svm_node *x_space;
@@ -115,7 +115,7 @@ float svm(unsigned *label, float *data, unsigned ncoeficients, unsigned nprotein
 	param.weight       = NULL;
 	
 	/* Builds the structure*/
-	buildProblem(data, &prob, x_space, ncoeficients);
+	buildProblem(labels, nproteins, data, &prob, x_space, ncoeficients);
 	            
 	/* Cross validation. */
 	accuracy = do_cross_validation(&prob, &param);
