@@ -64,8 +64,6 @@ static void readargs(int argc, char **argv)
 	if (argc < 6)
 		usage();
 	
-	warning("debug 0");
-	
 	nfeatures = atoi(argv[1]);
 	nselected = atoi(argv[2]);
 	popsize = atoi(argv[3]);
@@ -74,16 +72,12 @@ static void readargs(int argc, char **argv)
 	/* Count the number of proteins. */
 	for (unsigned i = 5; argv[i] != NULL; i++)
 		nproteins++;
-	
-	warning("debug 1");
 		
 	filenames = smalloc(nproteins*sizeof(char *));
 	
 	/* Extract protein files. */
 	for (unsigned i = 0; i < nproteins; i++)
 		filenames[i] = argv[5 + i];
-	
-	warning("debug 2");
 	
 	/* Assert program parameters. */
 	if (nfeatures == 0)
@@ -102,20 +96,14 @@ int main(int argc, char **argv)
 	
 	database.naminoacids = smalloc(nproteins*sizeof(unsigned));
 	
-	fprintf(stderr, "parsing database...");
-	
 	/*
 	 * Parse database in order to determine the largest
 	 * number of amino acids among all proteins.
 	 */
 	database_parse(filenames, nproteins, nfeatures);
 	
-	fprintf(stderr, "reading database...");
-	
 	/* Read database. */
 	database_read(filenames, nproteins, nfeatures);
-	
-	fprintf(stderr, "predicting...");
 	
 	predict(popsize, ngen);
 	

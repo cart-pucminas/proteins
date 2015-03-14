@@ -59,7 +59,7 @@ void database_parse
 		
 		/* Open working file. */
 		wfile = fopen(filenames[wprotein], "r");
-		if (wfile != NULL)
+		if (wfile == NULL)
 			error ("cannot open input file");
 		
 		/* Skip first line. */
@@ -160,7 +160,7 @@ void database_read
 
 		/* Open working file. */
 		wfile = fopen(filenames[wprotein], "r");
-		if (wfile != NULL)
+		if (wfile == NULL)
 			error ("cannot open input file");
 		
 		/* Read label. */
