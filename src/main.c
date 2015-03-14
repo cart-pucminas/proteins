@@ -29,6 +29,8 @@ static const char **filenames = NULL; /* Name of input files.              */
 unsigned nproteins = 0;               /* Number of proteins (input files). */
 unsigned nfeatures = 0;               /* Number of features.               */
 unsigned nselected = 0;               /* Number of selected features.      */
+static unsigned popsize = 0;          /* Population size.                  */
+static unsigned ngen = 0;             /* Number of generations.            */
 
 /**
  * @brief Database.
@@ -45,7 +47,7 @@ extern void predict(int popsize, int ngen);
  */
 static void usage(void)
 {
-	printf("Usage: predict <nfeatures> <nselected> <protein files>");
+	printf("Usage: predict <nfeatures> <nselected> <popsize> <ngen> <protein files>");
 	exit(EXIT_SUCCESS);
 }
 
@@ -60,31 +62,34 @@ static void readargs(int argc, char **argv)
 {
 	char *arg;
 	
-	((void)argc); /* Unused. */
-	((void)argv); /* Unused. */
-	
 	/* Missing arguments. */
-	if (argc < 4)
+	if (argc < 6)
 		usage();
 	
 	nfeatures = atoi(argv[1]);
 	nselected = atoi(argv[2]);
+	popsize = atoi(argv[3]);
+	ngen = atoi(argv[4]);
 	
 	/* Count the number of proteins. */
-	for (arg = argv[3]; arg != NULL; arg++)
+	for (arg = argv[5]; arg != NULL; arg++)
 		nproteins++;
 		
 	filenames = smalloc(nproteins*sizeof(char *));
 	
 	/* Extract protein files. */
 	for (unsigned i = 0; i < nproteins; i++)
-		filenames[i] = argv[3 + i];
+		filenames[i] = argv[5 + i];
 	
 	/* Assert program parameters. */
 	if (nfeatures == 0)
 		error("invalid number of features");
 	else if (nselected == 0)
 		error("invalid number of selected of features");
+	else if (popsize == 0)
+		error("invalid population size");
+	else if (ngen == 0)
+		error("invalid number of generations");
 }
 
 int main(int argc, char **argv)
@@ -102,7 +107,7 @@ int main(int argc, char **argv)
 	/* Read database. */
 	database_read(filenames, nproteins, nfeatures);
 	
-	predict(100, 100);
+	predict(popsize, ngen);
 	
 	/* House keeping. */
 	database_destroy();
