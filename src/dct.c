@@ -23,7 +23,6 @@
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
-
 /**
  * @brief Discrete cosine transform.
  * 
@@ -36,21 +35,16 @@
 void dct(float *x, unsigned n)
 {
 	for (unsigned i = 0; i < n; i++)
-	{	
-		float ipi;
-		
-		ipi = i*M_PI;
-			
+	{
 		for (unsigned j = 0; j < n; j++)
 		{
-			
 			if (i == 0)
 			{
-				x[i] += 1 / sqrt(n)*x[j];
+				x[i] += 1/sqrt(n)*x[j];
 				continue;
 			}
 			
-			x[i] += sqrt(2.0/n)*cos(ipi + ipi/(2.0*n))*x[j];
+			X[i] += sqrt(2.0/n)*cos(i*M_PI/(2.0*n)*(2.0*j + 1))*x[j];
 		}
 	}
 }
