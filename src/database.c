@@ -105,7 +105,7 @@ static void database_transpose(void)
 		{
 			data = database.data[wfeature];
 			transpose = 
-			smalloc(database.maxaminoacids*nproteins*sizeof(unsigned));
+			smalloc(database.maxaminoacids*nproteins*sizeof(float));
 			
 			for (unsigned j = 0; j < nproteins; j++)
 			{
@@ -187,6 +187,11 @@ void database_read
 				
 				token = strtok(NULL, ";");
 				wfeature++;
+				
+				if (wfeature > nfeatures)
+					error("bad input file");
+				if (waminoacid > database.maxaminoacids)
+					error("bad input file");
 			}
 			
 			waminoacid++;
