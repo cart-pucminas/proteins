@@ -200,17 +200,21 @@ static double gene_evaluate(void *g)
 	{
 		float *data;
 		float *protein;
+		unsigned naminoacids;
+		
+		naminoacids = database.naminoacids[wprotein];
 		
 		protein = 
-			smalloc(nselected*database.naminoacids[wprotein]*sizeof(float));
+			smalloc(nselected*naminoacids*sizeof(float));
 		
 		for (unsigned i = 0; i < nselected; i++)
 		{
+			
 			data = &database.data[GENE(g)->features[i]][wprotein*database.maxaminoacids];
-			memcpy(protein, data, database.naminoacids[wprotein]*sizeof(float));
+			memcpy(&protein[i*naminoacids], data, naminoacids*sizeof(float));
 		}
 		
-		dct(protein, database.naminoacids[wprotein]);
+		dct(protein, naminoacids);
 		
 		memcpy(&feature_matrix[wprotein*NCOEFFICIENTS], protein,NCOEFFICIENTS*sizeof(float));
 		
