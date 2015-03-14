@@ -159,7 +159,7 @@ static double grid_search(float *feature_matrix, double *bestg, double *bestc)
 			double gamma2; /* 2^gamma.   */
 			double cost2;  /* 2^cost.    */
 			
-			gamma2 = pow(2,gamma);
+			gamma2 = pow(2, gamma);
 			cost2 = pow(2, cost);
 
 			acc =
@@ -198,7 +198,7 @@ static double gene_evaluate(void *g)
 	/* Build feature matrix. */
 	for (unsigned wprotein = 0; wprotein < nproteins; wprotein++)
 	{
-		float *data;    
+		float *data;
 		float *protein;
 		
 		protein = 
@@ -206,7 +206,7 @@ static double gene_evaluate(void *g)
 		
 		for (unsigned i = 0; i < nselected; i++)
 		{
-			data = &database.data[i][wprotein*database.maxaminoacids];
+			data = &database.data[GENE(g)->features[i]][wprotein*database.maxaminoacids];
 			memcpy(protein, data, database.naminoacids[wprotein]*sizeof(float));
 		}
 		
