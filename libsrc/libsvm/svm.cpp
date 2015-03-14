@@ -569,7 +569,6 @@ void Solver::Solve(int l, const QMatrix& Q, const double *p_, const schar *y_,
 		{
 			counter = min(l,1000);
 			if(shrinking) do_shrinking();
-			info(".");
 		}
 
 		int i,j;
@@ -579,7 +578,6 @@ void Solver::Solve(int l, const QMatrix& Q, const double *p_, const schar *y_,
 			reconstruct_gradient();
 			// reset active set size and check
 			active_size = l;
-			info("*");
 			if(select_working_set(i,j)!=0)
 				break;
 			else
@@ -735,7 +733,6 @@ void Solver::Solve(int l, const QMatrix& Q, const double *p_, const schar *y_,
 			// reconstruct the whole gradient to calculate objective value
 			reconstruct_gradient();
 			active_size = l;
-			info("*");
 		}
 		fprintf(stderr,"\nWARNING: reaching max number of iterations\n");
 	}
@@ -770,8 +767,6 @@ void Solver::Solve(int l, const QMatrix& Q, const double *p_, const schar *y_,
 
 	si->upper_bound_p = Cp;
 	si->upper_bound_n = Cn;
-
-	info("\noptimization finished, #iter = %d\n",iter);
 
 	delete[] p;
 	delete[] y;
@@ -944,7 +939,6 @@ void Solver::do_shrinking()
 		unshrink = true;
 		reconstruct_gradient();
 		active_size = l;
-		info("*");
 	}
 
 	for(i=0;i<active_size;i++)
@@ -1462,9 +1456,6 @@ static void solve_c_svc(
 	for(i=0;i<l;i++)
 		sum_alpha += alpha[i];
 
-	if (Cp==Cn)
-		info("nu = %f\n", sum_alpha/(Cp*prob->l));
-
 	for(i=0;i<l;i++)
 		alpha[i] *= y[i];
 
@@ -1512,8 +1503,6 @@ static void solve_nu_svc(
 	s.Solve(l, SVC_Q(*prob,*param,y), zeros, y,
 		alpha, 1.0, 1.0, param->eps, si,  param->shrinking);
 	double r = si->r;
-
-	info("C = %f\n",1/r);
 
 	for(i=0;i<l;i++)
 		alpha[i] *= y[i]/r;
@@ -1590,7 +1579,6 @@ static void solve_epsilon_svr(
 		alpha[i] = alpha2[i] - alpha2[i+l];
 		sum_alpha += fabs(alpha[i]);
 	}
-	info("nu = %f\n",sum_alpha/(param->C*l));
 
 	delete[] alpha2;
 	delete[] linear_term;
@@ -1624,8 +1612,6 @@ static void solve_nu_svr(
 	Solver_NU s;
 	s.Solve(2*l, SVR_Q(*prob,*param), linear_term, y,
 		alpha2, C, C, param->eps, si, param->shrinking);
-
-	info("epsilon = %f\n",-si->r);
 
 	for(i=0;i<l;i++)
 		alpha[i] = alpha2[i] - alpha2[i+l];
@@ -1669,8 +1655,6 @@ static decision_function svm_train_one(
 			break;
 	}
 
-	info("obj = %f, rho = %f\n",si.obj,si.rho);
-
 	// output SVs
 
 	int nSV = 0;
@@ -1692,8 +1676,6 @@ static decision_function svm_train_one(
 			}
 		}
 	}
-
-	info("nSV = %d, nBSV = %d\n",nSV,nBSV);
 
 	decision_function f;
 	f.alpha = alpha;
@@ -2003,7 +1985,7 @@ static double svm_svr_probability(
 		else 
 			mae+=fabs(ymv[i]);
 	mae /= (prob->l-count);
-	info("Prob. model for test data: target value = predicted value + z,\nz: Laplace distribution e^(-|z|/sigma)/(2sigma),sigma= %g\n",mae);
+	
 	free(ymv);
 	return mae;
 }
@@ -2269,8 +2251,6 @@ svm_model *svm_train(const svm_problem *prob, const svm_parameter *param)
 			model->nSV[i] = nSV;
 			nz_count[i] = nSV;
 		}
-		
-		info("Total nSV = %d\n",total_sv);
 
 		model->l = total_sv;
 		model->SV = Malloc(svm_node *,total_sv);
@@ -2648,82 +2628,11 @@ int svm_save_model(const char *model_file_name, const svm_model *model)
 
 	const svm_parameter& param = model->param;
 
-	fprintf(fp,"svm_type %s\n", svm_type_table[param.svm_type]);
-	fprintf(fp,"kernel_type %s\n", kernel_type_table[param.kernel_type]);
-
-	if(param.kernel_type == POLY)
-		fprintf(fp,"degree %d\n", param.degree);
-
-	if(param.kernel_type == POLY || param.kernel_type == RBF || param.kernel_type == SIGMOID)
-		fprintf(fp,"gamma %g\n", param.gamma);
-
-	if(param.kernel_type == POLY || param.kernel_type == SIGMOID)
-		fprintf(fp,"coef0 %g\n", param.coef0);
-
 	int nr_class = model->nr_class;
 	int l = model->l;
-	fprintf(fp, "nr_class %d\n", nr_class);
-	fprintf(fp, "total_sv %d\n",l);
-	
-	{
-		fprintf(fp, "rho");
-		for(int i=0;i<nr_class*(nr_class-1)/2;i++)
-			fprintf(fp," %g",model->rho[i]);
-		fprintf(fp, "\n");
-	}
-	
-	if(model->label)
-	{
-		fprintf(fp, "label");
-		for(int i=0;i<nr_class;i++)
-			fprintf(fp," %d",model->label[i]);
-		fprintf(fp, "\n");
-	}
 
-	if(model->probA) // regression has probA only
-	{
-		fprintf(fp, "probA");
-		for(int i=0;i<nr_class*(nr_class-1)/2;i++)
-			fprintf(fp," %g",model->probA[i]);
-		fprintf(fp, "\n");
-	}
-	if(model->probB)
-	{
-		fprintf(fp, "probB");
-		for(int i=0;i<nr_class*(nr_class-1)/2;i++)
-			fprintf(fp," %g",model->probB[i]);
-		fprintf(fp, "\n");
-	}
-
-	if(model->nSV)
-	{
-		fprintf(fp, "nr_sv");
-		for(int i=0;i<nr_class;i++)
-			fprintf(fp," %d",model->nSV[i]);
-		fprintf(fp, "\n");
-	}
-
-	fprintf(fp, "SV\n");
 	const double * const *sv_coef = model->sv_coef;
 	const svm_node * const *SV = model->SV;
-
-	for(int i=0;i<l;i++)
-	{
-		for(int j=0;j<nr_class-1;j++)
-			fprintf(fp, "%.16g ",sv_coef[j][i]);
-
-		const svm_node *p = SV[i];
-
-		if(param.kernel_type == PRECOMPUTED)
-			fprintf(fp,"0:%d ",(int)(p->value));
-		else
-			while(p->index != -1)
-			{
-				fprintf(fp,"%d:%.8g ",p->index,p->value);
-				p++;
-			}
-		fprintf(fp, "\n");
-	}
 
 	setlocale(LC_ALL, old_locale);
 	free(old_locale);
