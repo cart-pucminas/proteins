@@ -45,7 +45,7 @@ extern void predict(int popsize, int ngen);
  */
 static void usage(void)
 {
-	printf("Usage: proteins <nfeatures> <input files> <nselected>");
+	printf("Usage: predict <nfeatures> <nselected> <protein files>");
 	exit(EXIT_SUCCESS);
 }
 
@@ -58,6 +58,8 @@ static void usage(void)
  */
 static void readargs(int argc, char **argv)
 {
+	char *arg;
+	
 	((void)argc); /* Unused. */
 	((void)argv); /* Unused. */
 	
@@ -65,15 +67,21 @@ static void readargs(int argc, char **argv)
 	if (argc < 4)
 		usage();
 	
-	/*
-	 * TODO: read and parse command line
-	 *       arguments.
-	 */
+	nfeatures = atoi(argv[1]);
+	nselected = atoi(argv[2]);
+	
+	/* Count the number of proteins. */
+	for (arg = argv[3]; arg != NULL; arg++)
+		nproteins++;
+		
+	filenames = smalloc(nproteins*sizeof(char *));
+	
+	/* Extract protein files. */
+	for (unsigned i = 0; i < nproteins; i++)
+		filenames[i] = argv[3 + i];
 	
 	/* Assert program parameters. */
-	if (nproteins == 0)
-		error("invalid number of proteins");
-	else if (nfeatures == 0)
+	if (nfeatures == 0)
 		error("invalid number of features");
 	else if (nselected == 0)
 		error("invalid number of selected of features");
@@ -98,6 +106,8 @@ int main(int argc, char **argv)
 	
 	/* House keeping. */
 	database_destroy();
+	
+	free(filenames);
 	
 	return (EXIT_SUCCESS);
 }
