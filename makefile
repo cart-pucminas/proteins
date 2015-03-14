@@ -11,16 +11,18 @@ export LIBSRCDIR = $(CURDIR)/libsrc
 export SRCDIR    = $(CURDIR)/src
 
 # Libraries.
-export LIBS = $(LIBDIR)/libmylibc.a -lm
+export LIBS = $(LIBDIR)/*.a -lm
 
 # Executable name.
 export EXEC = predict
 
 # Toolchain.
+export CXX=g++
 export CC = gcc
 export AR = ar
 
 # Toolchain configuration.
+CXXFLAGS=
 export OPTIMIZATION = -D NDEBUG -O3
 export CFLAGS = -I $(INCDIR) -ansi -pedantic -Wall -Wextra -Werror -std=c99
 

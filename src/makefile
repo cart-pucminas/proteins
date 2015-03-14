@@ -19,10 +19,17 @@
 # Source files.
 SRC = $(wildcard *.c)
 
+OBJ = $(SRC:.c=.o)
+
 # Builds everything.
-all: $(SRC)
-	$(CC) $(CFLAGS) $(SRC) -o $(BINDIR)/$(EXEC) $(LIBS)
+all: $(OBJ)
+	g++ *.o -o $(BINDIR)/$(EXEC) $(LIBS)
+	
+# Builds object file from C source file.
+%.o: %.c
+	$(CC) $< $(CFLAGS) -c -o $@
 	
 # Cleans compilation files.
 clean:
-	rm -f $(BINDIR)/$(EXEC)
+	@rm -f *.o
+	@rm -f $(BINDIR)/$(EXEC)
