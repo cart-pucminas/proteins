@@ -44,7 +44,7 @@ void dct(float *x, unsigned n)
 				continue;
 			}
 			
-			X[i] += sqrt(2.0/n)*cos(i*M_PI/(2.0*n)*(2.0*j + 1))*x[j];
+			x[i] += sqrt(2.0/n)*cos(i*M_PI/(2.0*n)*(2.0*j + 1))*x[j];
 		}
 	}
 }
