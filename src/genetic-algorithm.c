@@ -170,7 +170,7 @@ static double grid_search(float *feature_matrix, double *bestg, double *bestc)
 					gamma2,
 					cost2);
 			
-			/* Best arameters found. */
+			/* Best parameters found. */
 			if (acc >= bestacc)
 			{
 				bestacc = acc; 
@@ -208,15 +208,14 @@ static double gene_evaluate(void *g)
 			smalloc(nselected*naminoacids*sizeof(float));
 		
 		for (unsigned i = 0; i < nselected; i++)
-		{
-			
+		{	
 			data = &database.data[GENE(g)->features[i]][wprotein*database.maxaminoacids];
 			memcpy(&protein[i*naminoacids], data, naminoacids*sizeof(float));
 		}
 		
 		dct(protein, naminoacids);
 		
-		memcpy(&feature_matrix[wprotein*NCOEFFICIENTS], protein,NCOEFFICIENTS*sizeof(float));
+		memcpy(&feature_matrix[wprotein*NCOEFFICIENTS], protein, NCOEFFICIENTS*sizeof(float));
 		
 		free(protein);
 	}

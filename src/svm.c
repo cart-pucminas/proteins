@@ -76,11 +76,11 @@ static void buildProblem(unsigned *labels, unsigned nproteins, float *data, stru
 		idx = 0;
 		inst_max_index = -1;
 		
-		for (unsigned k = i*ncoeficients; k < (i+1)*ncoeficients; k++)
+		for (unsigned k = 0; k < ncoeficients; k++)
 		{
 			x_space[j].index = idx;
 			inst_max_index = x_space[j].index;
-			x_space[j].value = data[k];
+			x_space[j].value = data[i*ncoeficients + k];
 			idx++; j++;
 		}
 
