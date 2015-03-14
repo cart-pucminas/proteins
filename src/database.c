@@ -170,22 +170,25 @@ void database_read
 		
 		/* Read amino acid. */
 		waminoacid = 0;
-		while ((line = readline(wfile)) != NULL)
+		while (!feof(wfile))
 		{
 			char *token;       /* Working token.   */
 			unsigned wfeature; /* Working feature. */
-
+			
+			line = readline(wfile);
+			
 			/* Read line. */
 			wfeature = 0;
 			token = strtok(line, ";");
 			while (token != NULL)
 			{
-				token = strtok(line, "NULL");
 				sscanf(token, "%f", 
 					&database.data[wfeature][waminoacid*nproteins + wprotein]);
+				
+				token = strtok(NULL, ";");
 				wfeature++;
 			}
-
+			
 			waminoacid++;
 			free(line);
 		}
