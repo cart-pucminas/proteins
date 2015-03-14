@@ -21,11 +21,8 @@
 #include <math.h>
 
 #ifndef M_PI
-#define M_PI
-
 #define M_PI 3.14159265358979323846
-
-#endif /* M_PI */
+#endif
 
 /**
  * @brief Discrete cosine transform.
@@ -38,11 +35,14 @@
  */
 void dct(float *x, unsigned n)
 {
-	for (unsigned i = 1; i < n; i++)
-	{
+	for (unsigned i = 0; i < n; i++)
+	{	
+		float ipi;
+		
+		ipi = i*M_PI;
+			
 		for (unsigned j = 0; j < n; j++)
 		{
-			float ipi;
 			
 			if (i == 0)
 			{

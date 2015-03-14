@@ -21,25 +21,19 @@
 #include <mylibc/util.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "predict.h"
 	
 
 /* Program parameters. */
-static const char *filenames = NULL; /* Name of input files.              */
-unsigned nproteins = 0;       /* Number of proteins (input files). */
-unsigned nfeatures = 0;       /* Number of features.               */
-unsigned nselected = 0;       /* Number of selected features.      */
+static const char **filenames = NULL; /* Name of input files.              */
+unsigned nproteins = 0;               /* Number of proteins (input files). */
+unsigned nfeatures = 0;               /* Number of features.               */
+unsigned nselected = 0;               /* Number of selected features.      */
 
 /**
  * @brief Database.
  */
-struct 
-{
-	float **data;           /**< Data.                                   */
-	unsigned maxaminoacids; /**< Number of amino acids.                  */
-	unsigned *naminoacids;  /**< Number of amino acids for each protein. */
-	unsigned *nproteins;    /**< Number of proteins.                     */
-	unsigned *labels;       /**< Protein labels.                         */
-} database;
+struct database database;
 
 /* Forward declarations. */
 extern void predict(int popsize, int ngen);
@@ -69,7 +63,7 @@ static void readargs(int argc, char **argv)
 	
 	/* Missing arguments. */
 	if (argc < 4)
-		error("missing arguments");
+		usage();
 	
 	/*
 	 * TODO: read and parse command line
@@ -95,7 +89,7 @@ int main(int argc, char **argv)
 	 * Parse database in order to determine the largest
 	 * number of amino acids among all proteins.
 	 */
-	database_parse(filename, nproteins, nfeatures);
+	database_parse(filenames, nproteins, nfeatures);
 	
 	/* Read database. */
 	database_read(filenames, nproteins, nfeatures);

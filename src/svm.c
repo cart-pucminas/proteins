@@ -64,7 +64,7 @@ void buildProblem(float *data, struct svm_problem *prob, struct svm_node *x_spac
 
 	j = 0;
 	max_index = 0;
-	for (int i = 0 ; i < nproteins; i++)
+	for (unsigned i = 0; i < database.nproteins; i++)
 	{	   
 		int idx;     
 		int inst_max_index;
@@ -75,7 +75,7 @@ void buildProblem(float *data, struct svm_problem *prob, struct svm_node *x_spac
 		idx = 0;
 		inst_max_index = -1;
 		
-		for (int k = i*ncoeficients; k < (i+1)*ncoeficients; k++)
+		for (unsigned k = i*ncoeficients; k < (i+1)*ncoeficients; k++)
 		{
 			x_space[j].index = idx;
 			inst_max_index = x_space[j].index;

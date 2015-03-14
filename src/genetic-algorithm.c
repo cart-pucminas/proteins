@@ -271,7 +271,7 @@ static void *gene_crossover(void *gene1, void *gene2, int n)
 		{
 			if (middle[i] == begin[j] )
 			{
-				for (unsigned k = 0; k < n; k++ )
+				for (int k = 0; k < n; k++ )
 				{
 					if (GENE(gene2)->features[k] == begin[j])
 					{
@@ -286,7 +286,7 @@ static void *gene_crossover(void *gene1, void *gene2, int n)
 		{
 			if (middle[i] == end[j])
 			{
-				for (unsigned k = 0; k < n; k++ )
+				for (int k = 0; k < n; k++ )
 				{
 					if (GENE(gene2)->features[k] == end[j])
 					{

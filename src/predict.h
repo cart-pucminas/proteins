@@ -24,22 +24,26 @@
 	/**
 	 * @brief Database.
 	 */
-	extern struct 
+	struct database
 	{
 		float **data;           /**< Data.                                   */
 		unsigned maxaminoacids; /**< Number of amino acids.                  */
 		unsigned *naminoacids;  /**< Number of amino acids for each protein. */
 		unsigned nproteins;     /**< Number of proteins.                     */
 		unsigned *labels;       /**< Protein labels.                         */
-	} database;
+	};
 	
 	/* Forward definitions. */
 	extern float svm(unsigned *, float *, unsigned, unsigned, float, float);
 	extern void dct(float *, unsigned);
+	extern void database_read(const char **, unsigned, unsigned);
+	extern void database_parse(const char **, unsigned, unsigned);
+	extern void database_destroy(void);
 	
 	/* Forward definitions. */
 	extern unsigned nproteins;
 	extern unsigned nfeatures;
 	extern unsigned nselected;
+	extern struct database database;
 
 #endif /* PREDICT_H_ */
