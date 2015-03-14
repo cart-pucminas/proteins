@@ -26,6 +26,7 @@ export CFLAGS = -I $(INCDIR) -ansi -pedantic -Wall -Wextra -Werror -std=c99
 
 # Builds everything.
 all: libraries
+	mkdir -p $(BINDIR)
 	cd $(SRCDIR) && $(MAKE) all
 
 # Builds libraries.

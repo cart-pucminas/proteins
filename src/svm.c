@@ -52,10 +52,11 @@ static float do_cross_validation(struct svm_problem *prob, struct svm_parameter 
 	return (accuracy);
 }
 
-static void buildProblem(unsigned *labels, unsigned nproteins, float *data, struct svm_problem *prob, struct svm_node *x_space, unsigned ncoeficients)
+static void buildProblem(unsigned *labels, unsigned nproteins, float *data, struct svm_problem *prob, unsigned ncoeficients)
 {
 	int j;
 	int max_index;
+	struct svm_node *x_space;
 	
 	prob->l = nproteins;
 	prob->y = smalloc(nproteins*sizeof(double));
@@ -88,12 +89,13 @@ static void buildProblem(unsigned *labels, unsigned nproteins, float *data, stru
 			
 		x_space[j++].index = -1;
 	}
+	
+	free(x_space);
 }
 
 float svm(unsigned *labels, float *data, unsigned ncoeficients, unsigned nproteins, float c, float gamma)
 {
 	float accuracy;
-	struct svm_node *x_space;
 	struct svm_problem prob;
 	struct svm_parameter param;
 	
@@ -115,7 +117,7 @@ float svm(unsigned *labels, float *data, unsigned ncoeficients, unsigned nprotei
 	param.weight       = NULL;
 	
 	/* Builds the structure*/
-	buildProblem(labels, nproteins, data, &prob, x_space, ncoeficients);
+	buildProblem(labels, nproteins, data, &prob, ncoeficients);
 	            
 	/* Cross validation. */
 	accuracy = do_cross_validation(&prob, &param);
@@ -124,7 +126,6 @@ float svm(unsigned *labels, float *data, unsigned ncoeficients, unsigned nprotei
 	svm_destroy_param(&param);
 	free(prob.y);
 	free(prob.x);
-	free(x_space);
 	
 	return (accuracy);
 }
