@@ -8,7 +8,7 @@
 #include <limits.h>
 #include <locale.h>
 #include "svm.h"
-int libsvm_version = LIBSVM_VERSION;
+
 typedef float Qfloat;
 typedef signed char schar;
 #ifndef min
@@ -44,19 +44,6 @@ static void print_string_stdout(const char *s)
 	fflush(stdout);
 }
 static void (*svm_print_string) (const char *) = &print_string_stdout;
-#if 1
-static void info(const char *fmt,...)
-{
-	char buf[BUFSIZ];
-	va_list ap;
-	va_start(ap,fmt);
-	vsprintf(buf,fmt,ap);
-	va_end(ap);
-	(*svm_print_string)(buf);
-}
-#else
-static void info(const char *fmt,...) {}
-#endif
 
 //
 // Kernel Cache
@@ -474,9 +461,6 @@ void Solver::reconstruct_gradient()
 	for(j=0;j<active_size;j++)
 		if(is_free(j))
 			nr_free++;
-
-	if(2*nr_free < active_size)
-		info("\nWARNING: using -h 0 may be faster\n");
 
 	if (nr_free*l > 2*active_size*(l-active_size))
 	{
@@ -1204,6 +1188,9 @@ void Solver_NU::do_shrinking()
 		}
 }
 
+/**
+ * 
+ */
 double Solver_NU::calculate_rho()
 {
 	int nr_free1 = 0,nr_free2 = 0;
@@ -1254,9 +1241,9 @@ double Solver_NU::calculate_rho()
 	return (r1-r2)/2;
 }
 
-//
-// Q matrices for various formulations
-//
+/**
+ * 
+ */
 class SVC_Q: public Kernel
 { 
 public:
@@ -1307,6 +1294,9 @@ private:
 	double *QD;
 };
 
+/**
+ * 
+ */
 class ONE_CLASS_Q: public Kernel
 {
 public:
@@ -1353,6 +1343,9 @@ private:
 	double *QD;
 };
 
+/**
+ * 
+ */
 class SVR_Q: public Kernel
 { 
 public:
@@ -1428,9 +1421,9 @@ private:
 	double *QD;
 };
 
-//
-// construct and solve various formulations
-//
+/**
+ * 
+ */
 static void solve_c_svc(
 	const svm_problem *prob, const svm_parameter* param,
 	double *alpha, Solver::SolutionInfo* si, double Cp, double Cn)
@@ -1463,6 +1456,9 @@ static void solve_c_svc(
 	delete[] y;
 }
 
+/**
+ * 
+ */
 static void solve_nu_svc(
 	const svm_problem *prob, const svm_parameter *param,
 	double *alpha, Solver::SolutionInfo* si)
@@ -1516,6 +1512,9 @@ static void solve_nu_svc(
 	delete[] zeros;
 }
 
+/**
+ * 
+ */
 static void solve_one_class(
 	const svm_problem *prob, const svm_parameter *param,
 	double *alpha, Solver::SolutionInfo* si)
@@ -1548,6 +1547,9 @@ static void solve_one_class(
 	delete[] ones;
 }
 
+/**
+ * 
+ */
 static void solve_epsilon_svr(
 	const svm_problem *prob, const svm_parameter *param,
 	double *alpha, Solver::SolutionInfo* si)
@@ -1585,6 +1587,9 @@ static void solve_epsilon_svr(
 	delete[] y;
 }
 
+/**
+ * 
+ */
 static void solve_nu_svr(
 	const svm_problem *prob, const svm_parameter *param,
 	double *alpha, Solver::SolutionInfo* si)
@@ -1630,6 +1635,9 @@ struct decision_function
 	double rho;
 };
 
+/**
+ * 
+ */
 static decision_function svm_train_one(
 	const svm_problem *prob, const svm_parameter *param,
 	double Cp, double Cn)
@@ -1683,7 +1691,9 @@ static decision_function svm_train_one(
 	return f;
 }
 
-// Platt's binary SVM Probablistic Output: an improvement from Lin et al.
+/**
+ * 
+ */
 static void sigmoid_train(
 	int l, const double *dec_values, const double *labels, 
 	double& A, double& B)
@@ -1787,16 +1797,19 @@ static void sigmoid_train(
 
 		if (stepsize < min_step)
 		{
-			info("Line search fails in two-class probability estimates\n");
+			fprintf(stderr, "Line search fails in two-class probability estimates\n");
 			break;
 		}
 	}
 
 	if (iter>=max_iter)
-		info("Reaching maximal iterations in two-class probability estimates\n");
+		fprintf(stderr, "Reaching maximal iterations in two-class probability estimates\n");
 	free(t);
 }
 
+/**
+ * 
+ */
 static double sigmoid_predict(double decision_value, double A, double B)
 {
 	double fApB = decision_value*A+B;
@@ -1807,7 +1820,9 @@ static double sigmoid_predict(double decision_value, double A, double B)
 		return 1.0/(1+exp(fApB)) ;
 }
 
-// Method 2 from the multiclass_prob paper by Wu, Lin, and Weng
+/**
+ * 
+ */
 static void multiclass_probability(int k, double **r, double *p)
 {
 	int t,j;
@@ -1865,13 +1880,15 @@ static void multiclass_probability(int k, double **r, double *p)
 		}
 	}
 	if (iter>=max_iter)
-		info("Exceeds max_iter in multiclass_prob\n");
+		fprintf(stderr, "Exceeds max_iter in multiclass_prob\n");
 	for(t=0;t<k;t++) free(Q[t]);
 	free(Q);
 	free(Qp);
 }
 
-// Cross-validation decision values for probability estimates
+/**
+ * 
+ */
 static void svm_binary_svc_probability(
 	const svm_problem *prob, const svm_parameter *param,
 	double Cp, double Cn, double& probA, double& probB)
@@ -1958,7 +1975,9 @@ static void svm_binary_svc_probability(
 	free(perm);
 }
 
-// Return parameter of a Laplace distribution 
+/**
+ * 
+ */
 static double svm_svr_probability(
 	const svm_problem *prob, const svm_parameter *param)
 {
@@ -1991,8 +2010,9 @@ static double svm_svr_probability(
 }
 
 
-// label: label name, start: begin of each class, count: #data of classes, perm: indices to the original data
-// perm, length l, must be allocated before calling this subroutine
+/**
+ * 
+ */
 static void svm_group_classes(const svm_problem *prob, int *nr_class_ret, int **label_ret, int **start_ret, int **count_ret, int *perm)
 {
 	int l = prob->l;
@@ -2068,9 +2088,9 @@ static void svm_group_classes(const svm_problem *prob, int *nr_class_ret, int **
 	free(data_label);
 }
 
-//
-// Interface functions
-//
+/**
+ * 
+ */
 svm_model *svm_train(const svm_problem *prob, const svm_parameter *param)
 {
 	svm_model *model = Malloc(svm_model,1);
@@ -2133,7 +2153,7 @@ svm_model *svm_train(const svm_problem *prob, const svm_parameter *param)
 		// group training data of the same class
 		svm_group_classes(prob,&nr_class,&label,&start,&count,perm);
 		if(nr_class == 1) 
-			info("WARNING: training data in only one class. See README for details.\n");
+			fprintf(stderr, "WARNING: training data in only one class. See README for details.\n");
 		
 		svm_node **x = Malloc(svm_node *,l);
 		int i;
@@ -2315,7 +2335,9 @@ svm_model *svm_train(const svm_problem *prob, const svm_parameter *param)
 	return model;
 }
 
-// Stratified cross validation
+/**
+ * 
+ */
 void svm_cross_validation(const svm_problem *prob, const svm_parameter *param, int nr_fold, double *target)
 {
 	int i;
@@ -2436,48 +2458,17 @@ void svm_cross_validation(const svm_problem *prob, const svm_parameter *param, i
 	free(perm);
 }
 
-
-int svm_get_svm_type(const svm_model *model)
-{
-	return model->param.svm_type;
-}
-
+/**
+ * 
+ */
 int svm_get_nr_class(const svm_model *model)
 {
 	return model->nr_class;
 }
 
-void svm_get_labels(const svm_model *model, int* label)
-{
-	if (model->label != NULL)
-		for(int i=0;i<model->nr_class;i++)
-			label[i] = model->label[i];
-}
-
-void svm_get_sv_indices(const svm_model *model, int* indices)
-{
-	if (model->sv_indices != NULL)
-		for(int i=0;i<model->l;i++)
-			indices[i] = model->sv_indices[i];
-}
-
-int svm_get_nr_sv(const svm_model *model)
-{
-	return model->l;
-}
-
-double svm_get_svr_probability(const svm_model *model)
-{
-	if ((model->param.svm_type == EPSILON_SVR || model->param.svm_type == NU_SVR) &&
-	    model->probA!=NULL)
-		return model->probA[0];
-	else
-	{
-		fprintf(stderr,"Model doesn't contain information for SVR probability inference\n");
-		return 0;
-	}
-}
-
+/**
+ * 
+ */
 double svm_predict_values(const svm_model *model, const svm_node *x, double* dec_values)
 {
 	int i;
@@ -2554,6 +2545,9 @@ double svm_predict_values(const svm_model *model, const svm_node *x, double* dec
 	}
 }
 
+/**
+ * 
+ */
 double svm_predict(const svm_model *model, const svm_node *x)
 {
 	int nr_class = model->nr_class;
@@ -2569,6 +2563,9 @@ double svm_predict(const svm_model *model, const svm_node *x)
 	return pred_result;
 }
 
+/**
+ * 
+ */
 double svm_predict_probability(
 	const svm_model *model, const svm_node *x, double *prob_estimates)
 {
@@ -2608,282 +2605,9 @@ double svm_predict_probability(
 		return svm_predict(model, x);
 }
 
-static const char *svm_type_table[] =
-{
-	"c_svc","nu_svc","one_class","epsilon_svr","nu_svr",NULL
-};
-
-static const char *kernel_type_table[]=
-{
-	"linear","polynomial","rbf","sigmoid","precomputed",NULL
-};
-
-int svm_save_model(const char *model_file_name, const svm_model *model)
-{
-	FILE *fp = fopen(model_file_name,"w");
-	if(fp==NULL) return -1;
-
-	char *old_locale = strdup(setlocale(LC_ALL, NULL));
-	setlocale(LC_ALL, "C");
-
-	const svm_parameter& param = model->param;
-
-	int nr_class = model->nr_class;
-	int l = model->l;
-
-	const double * const *sv_coef = model->sv_coef;
-	const svm_node * const *SV = model->SV;
-
-	setlocale(LC_ALL, old_locale);
-	free(old_locale);
-
-	if (ferror(fp) != 0 || fclose(fp) != 0) return -1;
-	else return 0;
-}
-
-static char *line = NULL;
-static int max_line_len;
-
-static char* readline(FILE *input)
-{
-	int len;
-
-	if(fgets(line,max_line_len,input) == NULL)
-		return NULL;
-
-	while(strrchr(line,'\n') == NULL)
-	{
-		max_line_len *= 2;
-		line = (char *) realloc(line,max_line_len);
-		len = (int) strlen(line);
-		if(fgets(line+len,max_line_len-len,input) == NULL)
-			break;
-	}
-	return line;
-}
-
-//
-// FSCANF helps to handle fscanf failures.
-// Its do-while block avoids the ambiguity when
-// if (...)
-//    FSCANF();
-// is used
-//
-#define FSCANF(_stream, _format, _var) do{ if (fscanf(_stream, _format, _var) != 1) return false; }while(0)
-bool read_model_header(FILE *fp, svm_model* model)
-{
-	svm_parameter& param = model->param;
-	char cmd[81];
-	while(1)
-	{
-		FSCANF(fp,"%80s",cmd);
-
-		if(strcmp(cmd,"svm_type")==0)
-		{
-			FSCANF(fp,"%80s",cmd);
-			int i;
-			for(i=0;svm_type_table[i];i++)
-			{
-				if(strcmp(svm_type_table[i],cmd)==0)
-				{
-					param.svm_type=i;
-					break;
-				}
-			}
-			if(svm_type_table[i] == NULL)
-			{
-				fprintf(stderr,"unknown svm type.\n");
-				return false;
-			}
-		}
-		else if(strcmp(cmd,"kernel_type")==0)
-		{		
-			FSCANF(fp,"%80s",cmd);
-			int i;
-			for(i=0;kernel_type_table[i];i++)
-			{
-				if(strcmp(kernel_type_table[i],cmd)==0)
-				{
-					param.kernel_type=i;
-					break;
-				}
-			}
-			if(kernel_type_table[i] == NULL)
-			{
-				fprintf(stderr,"unknown kernel function.\n");	
-				return false;
-			}
-		}
-		else if(strcmp(cmd,"degree")==0)
-			FSCANF(fp,"%d",&param.degree);
-		else if(strcmp(cmd,"gamma")==0)
-			FSCANF(fp,"%lf",&param.gamma);
-		else if(strcmp(cmd,"coef0")==0)
-			FSCANF(fp,"%lf",&param.coef0);
-		else if(strcmp(cmd,"nr_class")==0)
-			FSCANF(fp,"%d",&model->nr_class);
-		else if(strcmp(cmd,"total_sv")==0)
-			FSCANF(fp,"%d",&model->l);
-		else if(strcmp(cmd,"rho")==0)
-		{
-			int n = model->nr_class * (model->nr_class-1)/2;
-			model->rho = Malloc(double,n);
-			for(int i=0;i<n;i++)
-				FSCANF(fp,"%lf",&model->rho[i]);
-		}
-		else if(strcmp(cmd,"label")==0)
-		{
-			int n = model->nr_class;
-			model->label = Malloc(int,n);
-			for(int i=0;i<n;i++)
-				FSCANF(fp,"%d",&model->label[i]);
-		}
-		else if(strcmp(cmd,"probA")==0)
-		{
-			int n = model->nr_class * (model->nr_class-1)/2;
-			model->probA = Malloc(double,n);
-			for(int i=0;i<n;i++)
-				FSCANF(fp,"%lf",&model->probA[i]);
-		}
-		else if(strcmp(cmd,"probB")==0)
-		{
-			int n = model->nr_class * (model->nr_class-1)/2;
-			model->probB = Malloc(double,n);
-			for(int i=0;i<n;i++)
-				FSCANF(fp,"%lf",&model->probB[i]);
-		}
-		else if(strcmp(cmd,"nr_sv")==0)
-		{
-			int n = model->nr_class;
-			model->nSV = Malloc(int,n);
-			for(int i=0;i<n;i++)
-				FSCANF(fp,"%d",&model->nSV[i]);
-		}
-		else if(strcmp(cmd,"SV")==0)
-		{
-			while(1)
-			{
-				int c = getc(fp);
-				if(c==EOF || c=='\n') break;
-			}
-			break;
-		}
-		else
-		{
-			fprintf(stderr,"unknown text in model file: [%s]\n",cmd);
-			return false;
-		}
-	}
-
-	return true;
-
-}
-
-svm_model *svm_load_model(const char *model_file_name)
-{
-	FILE *fp = fopen(model_file_name,"rb");
-	if(fp==NULL) return NULL;
-
-	char *old_locale = strdup(setlocale(LC_ALL, NULL));
-	setlocale(LC_ALL, "C");
-
-	// read parameters
-
-	svm_model *model = Malloc(svm_model,1);
-	model->rho = NULL;
-	model->probA = NULL;
-	model->probB = NULL;
-	model->sv_indices = NULL;
-	model->label = NULL;
-	model->nSV = NULL;
-	
-	// read header
-	if (!read_model_header(fp, model))
-	{
-		fprintf(stderr, "ERROR: fscanf failed to read model\n");
-		setlocale(LC_ALL, old_locale);
-		free(old_locale);
-		free(model->rho);
-		free(model->label);
-		free(model->nSV);
-		free(model);
-		return NULL;
-	}
-	
-	// read sv_coef and SV
-
-	int elements = 0;
-	long pos = ftell(fp);
-
-	max_line_len = 1024;
-	line = Malloc(char,max_line_len);
-	char *p,*endptr,*idx,*val;
-
-	while(readline(fp)!=NULL)
-	{
-		p = strtok(line,":");
-		while(1)
-		{
-			p = strtok(NULL,":");
-			if(p == NULL)
-				break;
-			++elements;
-		}
-	}
-	elements += model->l;
-
-	fseek(fp,pos,SEEK_SET);
-
-	int m = model->nr_class - 1;
-	int l = model->l;
-	model->sv_coef = Malloc(double *,m);
-	int i;
-	for(i=0;i<m;i++)
-		model->sv_coef[i] = Malloc(double,l);
-	model->SV = Malloc(svm_node*,l);
-	svm_node *x_space = NULL;
-	if(l>0) x_space = Malloc(svm_node,elements);
-
-	int j=0;
-	for(i=0;i<l;i++)
-	{
-		readline(fp);
-		model->SV[i] = &x_space[j];
-
-		p = strtok(line, " \t");
-		model->sv_coef[0][i] = strtod(p,&endptr);
-		for(int k=1;k<m;k++)
-		{
-			p = strtok(NULL, " \t");
-			model->sv_coef[k][i] = strtod(p,&endptr);
-		}
-
-		while(1)
-		{
-			idx = strtok(NULL, ":");
-			val = strtok(NULL, " \t");
-
-			if(val == NULL)
-				break;
-			x_space[j].index = (int) strtol(idx,&endptr,10);
-			x_space[j].value = strtod(val,&endptr);
-
-			++j;
-		}
-		x_space[j++].index = -1;
-	}
-	free(line);
-
-	setlocale(LC_ALL, old_locale);
-	free(old_locale);
-
-	if (ferror(fp) != 0 || fclose(fp) != 0)
-		return NULL;
-
-	model->free_sv = 1;	// XXX
-	return model;
-}
-
+/**
+ * 
+ */
 void svm_free_model_content(svm_model* model_ptr)
 {
 	if(model_ptr->free_sv && model_ptr->l > 0 && model_ptr->SV != NULL)
@@ -2933,127 +2657,6 @@ void svm_destroy_param(svm_parameter* param)
 {
 	free(param->weight_label);
 	free(param->weight);
-}
-
-const char *svm_check_parameter(const svm_problem *prob, const svm_parameter *param)
-{
-	// svm_type
-
-	int svm_type = param->svm_type;
-	if(svm_type != C_SVC &&
-	   svm_type != NU_SVC &&
-	   svm_type != ONE_CLASS &&
-	   svm_type != EPSILON_SVR &&
-	   svm_type != NU_SVR)
-		return "unknown svm type";
-	
-	// kernel_type, degree
-	
-	int kernel_type = param->kernel_type;
-	if(kernel_type != LINEAR &&
-	   kernel_type != POLY &&
-	   kernel_type != RBF &&
-	   kernel_type != SIGMOID &&
-	   kernel_type != PRECOMPUTED)
-		return "unknown kernel type";
-
-	if(param->gamma < 0)
-		return "gamma < 0";
-
-	if(param->degree < 0)
-		return "degree of polynomial kernel < 0";
-
-	// cache_size,eps,C,nu,p,shrinking
-
-	if(param->cache_size <= 0)
-		return "cache_size <= 0";
-
-	if(param->eps <= 0)
-		return "eps <= 0";
-
-	if(svm_type == C_SVC ||
-	   svm_type == EPSILON_SVR ||
-	   svm_type == NU_SVR)
-		if(param->C <= 0)
-			return "C <= 0";
-
-	if(svm_type == NU_SVC ||
-	   svm_type == ONE_CLASS ||
-	   svm_type == NU_SVR)
-		if(param->nu <= 0 || param->nu > 1)
-			return "nu <= 0 or nu > 1";
-
-	if(svm_type == EPSILON_SVR)
-		if(param->p < 0)
-			return "p < 0";
-
-	if(param->shrinking != 0 &&
-	   param->shrinking != 1)
-		return "shrinking != 0 and shrinking != 1";
-
-	if(param->probability != 0 &&
-	   param->probability != 1)
-		return "probability != 0 and probability != 1";
-
-	if(param->probability == 1 &&
-	   svm_type == ONE_CLASS)
-		return "one-class SVM probability output not supported yet";
-
-
-	// check whether nu-svc is feasible
-	
-	if(svm_type == NU_SVC)
-	{
-		int l = prob->l;
-		int max_nr_class = 16;
-		int nr_class = 0;
-		int *label = Malloc(int,max_nr_class);
-		int *count = Malloc(int,max_nr_class);
-
-		int i;
-		for(i=0;i<l;i++)
-		{
-			int this_label = (int)prob->y[i];
-			int j;
-			for(j=0;j<nr_class;j++)
-				if(this_label == label[j])
-				{
-					++count[j];
-					break;
-				}
-			if(j == nr_class)
-			{
-				if(nr_class == max_nr_class)
-				{
-					max_nr_class *= 2;
-					label = (int *)realloc(label,max_nr_class*sizeof(int));
-					count = (int *)realloc(count,max_nr_class*sizeof(int));
-				}
-				label[nr_class] = this_label;
-				count[nr_class] = 1;
-				++nr_class;
-			}
-		}
-	
-		for(i=0;i<nr_class;i++)
-		{
-			int n1 = count[i];
-			for(int j=i+1;j<nr_class;j++)
-			{
-				int n2 = count[j];
-				if(param->nu*(n1+n2)/2 > min(n1,n2))
-				{
-					free(label);
-					free(count);
-					return "specified nu is infeasible";
-				}
-			}
-		}
-		free(label);
-		free(count);
-	}
-
-	return NULL;
 }
 
 int svm_check_probability_model(const svm_model *model)
