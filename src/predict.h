@@ -21,6 +21,8 @@
 #ifndef PREDICT_H_
 #define PREDICT_H_
 
+	#include <libsvm/svm.h>
+
 	/**
 	 * @brief Database.
 	 */
@@ -34,11 +36,13 @@
 	};
 	
 	/* Forward definitions. */
-	extern float svm(unsigned *, float *, unsigned, unsigned, float, float);
 	extern void dct(float *, unsigned);
 	extern void database_read(const char **, unsigned, unsigned);
 	extern void database_parse(const char **, unsigned, unsigned);
 	extern void database_destroy(void);
+	extern float svm(struct svm_problem *, float, float);
+	extern void buildProblem(unsigned *, unsigned, float *, struct svm_problem *, unsigned);
+	extern void destroy_problem(struct svm_problem *);
 	
 	/* Forward definitions. */
 	extern unsigned nproteins;

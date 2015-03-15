@@ -52,16 +52,15 @@ static float do_cross_validation(struct svm_problem *prob, struct svm_parameter 
 	return (accuracy);
 }
 
-static void buildProblem(unsigned *labels, unsigned nproteins, float *data, struct svm_problem *prob, unsigned ncoeficients)
+void buildProblem(unsigned *labels, unsigned nproteins, float *data, struct svm_problem *prob, unsigned ncoeficients)
 {
 	int j;
 	int max_index;
-	struct svm_node *x_space;
 	
 	prob->l = nproteins;
 	prob->y = smalloc(nproteins*sizeof(double));
 	prob->x = smalloc(nproteins*sizeof(struct svm_node *));
-	x_space = smalloc(((ncoeficients*nproteins)+nproteins)*sizeof(struct svm_node));
+	prob->x_space = smalloc(((ncoeficients*nproteins)+nproteins)*sizeof(struct svm_node));
 
 	j = 0;
 	max_index = 0;
@@ -70,7 +69,7 @@ static void buildProblem(unsigned *labels, unsigned nproteins, float *data, stru
 		int idx;     
 		int inst_max_index;
 		
-		prob->x[i] = &x_space[j];
+		prob->x[i] = &prob->x_space[j];
 		prob->y[i] = labels[i];
 		
 		idx = 0;
@@ -78,25 +77,29 @@ static void buildProblem(unsigned *labels, unsigned nproteins, float *data, stru
 		
 		for (unsigned k = 0; k < ncoeficients; k++)
 		{
-			x_space[j].index = idx;
-			inst_max_index = x_space[j].index;
-			x_space[j].value = data[i*ncoeficients + k];
+			prob->x_space[j].index = idx;
+			inst_max_index = prob->x_space[j].index;
+			prob->x_space[j].value = data[i*ncoeficients + k];
 			idx++; j++;
 		}
 
 		if(inst_max_index > max_index)
 			max_index = inst_max_index;
 			
-		x_space[j++].index = -1;
+		prob->x_space[j++].index = -1;
 	}
-	
-	free(x_space);
 }
 
-float svm(unsigned *labels, float *data, unsigned ncoeficients, unsigned nproteins, float c, float gamma)
+void destroy_problem(struct svm_problem *prob)
+{
+	free(prob->x_space);
+	free(prob->y);
+	free(prob->x);
+}
+
+float svm(struct svm_problem *prob, float c, float gamma)
 {
 	float accuracy;
-	struct svm_problem prob;
 	struct svm_parameter param;
 	
 	/* Set parameters. */
@@ -115,17 +118,12 @@ float svm(unsigned *labels, float *data, unsigned ncoeficients, unsigned nprotei
 	param.nr_weight    = 0;
 	param.weight_label = NULL;
 	param.weight       = NULL;
-	
-	/* Builds the structure*/
-	buildProblem(labels, nproteins, data, &prob, ncoeficients);
 	            
 	/* Cross validation. */
-	accuracy = do_cross_validation(&prob, &param);
+	accuracy = do_cross_validation(prob, &param);
 
 	/* House keeping. */
 	svm_destroy_param(&param);
-	free(prob.y);
-	free(prob.x);
 	
 	return (accuracy);
 }

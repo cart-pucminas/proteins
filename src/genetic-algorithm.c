@@ -23,6 +23,7 @@
 #include <mylibc/graph.h>
 #include <mylibc/matrix.h>
 #include <mylibc/util.h>
+#include <libsvm/svm.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
@@ -135,6 +136,8 @@ static void *gene_random(void)
  */
 static double grid_search(float *feature_matrix, double *bestg, double *bestc)
 {
+	struct svm_problem prob;
+	
 	/*
 	 * Adjust these
 	 * at your will.
@@ -147,6 +150,8 @@ static double grid_search(float *feature_matrix, double *bestg, double *bestc)
 	assert(feature_matrix != NULL);
 	assert(bestg != NULL);
 	assert(bestc != NULL);
+	
+	buildProblem(database.labels, nproteins, feature_matrix, &prob, NCOEFFICIENTS);
 	
 	bestacc = 0, *bestg = 0, *bestc = 0;
 	
@@ -162,13 +167,9 @@ static double grid_search(float *feature_matrix, double *bestg, double *bestc)
 			gamma2 = pow(2, gamma);
 			cost2 = pow(2, cost);
 
-			acc =
-				svm(database.labels,
-					feature_matrix,
-					NCOEFFICIENTS,
-					nproteins,
-					gamma2,
-					cost2);
+			acc = svm(&prob, gamma2, cost2);
+			
+			fprintf(stderr, "grid_search: acc=%.10lf cost=%lf gamma=%lf\n", acc, cost, gamma);
 			
 			/* Best parameters found. */
 			if (acc >= bestacc)
@@ -179,6 +180,8 @@ static double grid_search(float *feature_matrix, double *bestg, double *bestc)
 			}
 		}
 	}
+	
+	destroy_problem(&prob);
 	
 	return (bestacc);
 }
