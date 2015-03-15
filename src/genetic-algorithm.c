@@ -169,8 +169,6 @@ static double grid_search(float *feature_matrix, double *bestg, double *bestc)
 
 			acc = svm(&prob, gamma2, cost2);
 			
-			fprintf(stderr, "grid_search: acc=%.10lf cost=%lf gamma=%lf\n", acc, cost, gamma);
-			
 			/* Best parameters found. */
 			if (acc >= bestacc)
 			{
