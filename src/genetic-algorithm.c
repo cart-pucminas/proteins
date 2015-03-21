@@ -185,17 +185,49 @@ static double grid_search(double *feature_matrix, double *bestg, double *bestc)
 }
 
 /**
+ * @brief Bubble sort.
+ */
+static void sort(unsigned *a, unsigned n)
+{
+	/* Sanity check. */
+	assert(a != NULL);
+	assert(b != 0);
+	
+	/* Sort. */
+	for (unsigned i = 0; i < n; i++)
+	{
+		for (unsigned j = i + 1; j < n; j++)
+		{
+			if (a[j] < a[i])
+			{
+				unsigned tmp;
+				
+				tmp = a[j];
+				a[j] = a[i];
+				a[i] = tmp;
+			}
+		}
+	}
+}
+
+/**
  * @brief Evaluates the fitness of a gene.
  */
 static double gene_evaluate(void *g)
 {
 	double *protein;        /* Selected aminoacids of a protein. */
 	double *feature_matrix; /* Feature matrix.                   */
+	unsigned *selected;     /* Selected features.                */
 	
 	/* Sanity check. */
 	assert(g != NULL);
 	
 	feature_matrix = smalloc(NCOEFFICIENTS*nproteins*sizeof(double));
+	selected = smalloc(nselected*sizeof(unsigned));
+	
+	memcpy(selected, GENE(g)->features, nselected*sizeof(unsigned));
+	
+	sort(selected, nselected);
 	
 	/* Build feature matrix. */
 	protein =  smalloc(nselected*database.maxaminoacids*sizeof(double));
@@ -208,7 +240,7 @@ static double gene_evaluate(void *g)
 		
 		for (unsigned i = 0; i < nselected; i++)
 		{	
-			data = &database.data[GENE(g)->features[i]][wprotein*database.maxaminoacids];
+			data = &database.data[selected[i]][wprotein*database.maxaminoacids];
 			memcpy(&protein[i*naminoacids], data, naminoacids*sizeof(double));
 		}
 
@@ -223,6 +255,8 @@ static double gene_evaluate(void *g)
 	GENE(g)->accuracy =
 		grid_search(feature_matrix, &GENE(g)->gamma, &GENE(g)->cost);
 	
+	/* House keeping. */
+	free(selected);
 	free(feature_matrix);
 	
 	return (GENE(g)->accuracy);

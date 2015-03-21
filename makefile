@@ -23,8 +23,8 @@ export AR = ar
 
 # Toolchain configuration.
 CXXFLAGS=
-export OPTIMIZATION = -D NDEBUG -O3
 export CFLAGS = -I $(INCDIR) -ansi -pedantic -Wall -Wextra -Werror -std=c99
+export CFLAGS += -D NDEBUG -O3
 
 # Builds everything.
 all: libraries
