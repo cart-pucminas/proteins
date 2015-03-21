@@ -211,12 +211,13 @@ static double gene_evaluate(void *g)
 			data = &database.data[GENE(g)->features[i]][wprotein*database.maxaminoacids];
 			memcpy(&protein[i*naminoacids], data, naminoacids*sizeof(double));
 		}
-	
+
 		dct(protein, nselected*naminoacids);
 		
-		memcpy(&feature_matrix[wprotein*NCOEFFICIENTS], protein, NCOEFFICIENTS*sizeof(double));
+		memcpy(&feature_matrix[wprotein*NCOEFFICIENTS],
+			protein,
+			NCOEFFICIENTS*sizeof(double));
 	}
-	
 	free(protein);
 	
 	GENE(g)->accuracy =

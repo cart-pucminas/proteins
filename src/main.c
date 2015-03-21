@@ -96,14 +96,20 @@ int main(int argc, char **argv)
 	
 	database.naminoacids = smalloc(nproteins*sizeof(unsigned));
 	
+	fprintf(stderr, "info: parsing database...\n");
+	
 	/*
 	 * Parse database in order to determine the largest
 	 * number of amino acids among all proteins.
 	 */
 	database_parse(filenames, nproteins, nfeatures);
 	
+	fprintf(stderr, "info: reading database...\n");
+	
 	/* Read database. */
 	database_read(filenames, nproteins, nfeatures);
+	
+	fprintf(stderr, "info: predcting...\n");
 	
 	predict(popsize, ngen);
 	
