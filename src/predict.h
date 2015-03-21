@@ -28,7 +28,7 @@
 	 */
 	struct database
 	{
-		float **data;           /**< Data.                                   */
+		double **data;           /**< Data.                                   */
 		unsigned maxaminoacids; /**< Number of amino acids.                  */
 		unsigned *naminoacids;  /**< Number of amino acids for each protein. */
 		unsigned nproteins;     /**< Number of proteins.                     */
@@ -36,12 +36,12 @@
 	};
 	
 	/* Forward definitions. */
-	extern void dct(float *, unsigned);
+	extern void dct(double *, unsigned);
 	extern void database_read(const char **, unsigned, unsigned);
 	extern void database_parse(const char **, unsigned, unsigned);
 	extern void database_destroy(void);
-	extern float svm(struct svm_problem *, float, float);
-	extern void buildProblem(unsigned *, unsigned, float *, struct svm_problem *, unsigned);
+	extern double svm(struct svm_problem *, double, double);
+	extern void buildProblem(unsigned *, unsigned, double *, struct svm_problem *, unsigned);
 	extern void destroy_problem(struct svm_problem *);
 	
 	/* Forward definitions. */

@@ -30,9 +30,9 @@
 #define NR_FOLD 10
 
 
-static float do_cross_validation(struct svm_problem *prob, struct svm_parameter *param)
+static double do_cross_validation(struct svm_problem *prob, struct svm_parameter *param)
 {
-	float accuracy;
+	double accuracy;
 	int total_correct;
 	double *target = smalloc(prob->l*sizeof(double));
 
@@ -52,7 +52,7 @@ static float do_cross_validation(struct svm_problem *prob, struct svm_parameter 
 	return (accuracy);
 }
 
-void buildProblem(unsigned *labels, unsigned nproteins, float *data, struct svm_problem *prob, unsigned ncoeficients)
+void buildProblem(unsigned *labels, unsigned nproteins, double *data, struct svm_problem *prob, unsigned ncoeficients)
 {
 	int j;
 	int max_index;
@@ -97,9 +97,9 @@ void destroy_problem(struct svm_problem *prob)
 	free(prob->x);
 }
 
-float svm(struct svm_problem *prob, float c, float gamma)
+double svm(struct svm_problem *prob, double c, double gamma)
 {
-	float accuracy;
+	double accuracy;
 	struct svm_parameter param;
 	
 	/* Set parameters. */

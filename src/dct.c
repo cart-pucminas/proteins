@@ -32,7 +32,7 @@
  * @param x Vector where the discrete cosine transform should be applied.
  * @param n Dimension of the vector.
  */
-void dct(float *x, unsigned n)
+void dct(double *x, unsigned n)
 {
 	for (unsigned i = 0; i < n; i++)
 	{
