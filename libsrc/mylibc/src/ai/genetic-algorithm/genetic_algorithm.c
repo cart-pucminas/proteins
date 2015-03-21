@@ -30,6 +30,9 @@ static void selection(array_t parents, array_t pop)
 	for (i = 0; i < popsize; i++)
 		sum += ORGANISM(ARRAY(pop, i))->fitness;
 	
+	if (sum == 0.0)
+		error("zero-sum fitness");
+	
 	/* Select organisms. */	
 	for (i = 0; i < popsize; i++)
 	{
@@ -162,12 +165,12 @@ void *genetic_algorithm(struct genome *_g, int _popsize, int ngen, int options)
 	/* Build initial population. */
 	for (i = 0; i < popsize; i++)
 		ARRAY(pop, i) = organism_random();
-	
+		
 	/* Iterate over generations. */
 	if (options & GA_POPULATION_STATISTICS)
 		printf("population;best organism\n");
 	do
-	{	
+	{
 		/* Print population statistics. */
 		if (options & GA_POPULATION_STATISTICS)
 		{
@@ -180,7 +183,12 @@ void *genetic_algorithm(struct genome *_g, int _popsize, int ngen, int options)
 					bestorg = ORGANISM(ARRAY(pop, i));
 			}
 			if (options & GA_MINIMIZATION)
+			{	
+				if (mean == 0.0)
+					error("zero-sum fitness");
+		
 				printf("%f;%f\n", popsize/mean, 1.0/bestorg->fitness);
+			}
 			else
 				printf("%f;%f\n", mean/popsize, bestorg->fitness);
 		}

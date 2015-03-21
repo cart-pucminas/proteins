@@ -34,7 +34,7 @@ install: release
 	cp $(INCDIR)/* $(PREFIX)/include/mylibc
 
 # Uninstalls mylibc.
-uninstall:
+uninstall: clean
 	rm -f $(PREFIX)/lib/$(LIB)
 	rm -R -f $(PREFIX)/include/mylibc
 
