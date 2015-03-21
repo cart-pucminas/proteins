@@ -97,25 +97,24 @@ static void database_transpose(void)
 	/* Transpose database. */
 	for (unsigned wfeature = 0; wfeature < nfeatures; wfeature++)
 	{
+		double *data;      /* Original data table.  */
+		double *transpose; /* Transpose data table. */
+		
+		data = database.data[wfeature];
+		transpose = smalloc(database.maxaminoacids*nproteins*sizeof(double));
+			
 		/* Transpose data tables. */
 		for (unsigned i = 0; i < database.maxaminoacids; i++)
-		{
-			float *data;      /* Original data table.  */
-			float *transpose; /* Transpose data table. */
-	
-			data = database.data[wfeature];
-			transpose = 
-			smalloc(database.maxaminoacids*nproteins*sizeof(float));
-			
+		{			
 			for (unsigned j = 0; j < nproteins; j++)
 			{
 				transpose[j*database.maxaminoacids + i] =
 					data[i*database.nproteins + j];
 			}
-			
-			database.data[wfeature] = transpose;
-			free(data);
 		}
+					
+		database.data[wfeature] = transpose;
+		free(data);
 	}
 }
 
@@ -146,10 +145,10 @@ void database_read
 	/* Allocate database. */
 	database.nproteins = nproteins;
 	database.labels = smalloc(nproteins*sizeof(unsigned));
-	database.data = smalloc(nfeatures*sizeof(float *));
+	database.data = smalloc(nfeatures*sizeof(double *));
 	width = database.maxaminoacids*nproteins;
 	for (unsigned i = 0; i < nfeatures; i++)
-		database.data[i] = smalloc(width*sizeof(float));
+		database.data[i] = smalloc(width*sizeof(double));
 
 	/* Read database. */
 	for (unsigned wprotein = 0; wprotein < nproteins; wprotein++)
@@ -172,18 +171,19 @@ void database_read
 		waminoacid = 0;
 		while (!feof(wfile))
 		{
-			char *token;       /* Working token.   */
-			unsigned wfeature; /* Working feature. */
+			char *token;       /* Working token.                  */
+			unsigned wfeature; /* Working feature.                */
+			unsigned j;        /* waminoacid*nproteins + wprotein */
 			
 			line = readline(wfile);
 			
 			/* Read line. */
 			wfeature = 0;
 			token = strtok(line, ";");
+			j = waminoacid*nproteins + wprotein;
 			while (token != NULL)
 			{
-				sscanf(token, "%f", 
-					&database.data[wfeature][waminoacid*nproteins + wprotein]);
+				sscanf(token, "%lf", &database.data[wfeature][j]);
 				
 				token = strtok(NULL, ";");
 				wfeature++;
