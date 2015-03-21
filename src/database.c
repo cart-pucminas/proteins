@@ -94,15 +94,15 @@ void database_parse
  */
 static void database_transpose(void)
 {
-	float *data;      /* Original data table.  */
-	float *transpose; /* Transpose data table. */
-	
 	/* Transpose database. */
 	for (unsigned wfeature = 0; wfeature < nfeatures; wfeature++)
 	{
 		/* Transpose data tables. */
 		for (unsigned i = 0; i < database.maxaminoacids; i++)
 		{
+			float *data;      /* Original data table.  */
+			float *transpose; /* Transpose data table. */
+	
 			data = database.data[wfeature];
 			transpose = 
 			smalloc(database.maxaminoacids*nproteins*sizeof(float));

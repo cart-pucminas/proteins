@@ -122,7 +122,7 @@ static void *gene_random(void)
 		
 		do
 		{
-			feature = randnum()%nfeatures + 1;
+			feature = randnum()%nfeatures;
 		} while (has_feature(g, feature));
 
 		g->features[i] = feature;
@@ -189,7 +189,8 @@ static double grid_search(float *feature_matrix, double *bestg, double *bestc)
  */
 static double gene_evaluate(void *g)
 {
-	float *feature_matrix;
+	float *protein;        /* Selected aminoacids of a protein. */
+	float *feature_matrix; /* Feature matrix.                   */
 	
 	/* Sanity check. */
 	assert(g != NULL);
@@ -197,16 +198,13 @@ static double gene_evaluate(void *g)
 	feature_matrix = smalloc(NCOEFFICIENTS*nproteins*sizeof(float));
 	
 	/* Build feature matrix. */
+	protein =  smalloc(nselected*database.maxaminoacids*sizeof(float));
 	for (unsigned wprotein = 0; wprotein < nproteins; wprotein++)
 	{
 		float *data;
-		float *protein;
 		unsigned naminoacids;
 		
 		naminoacids = database.naminoacids[wprotein];
-		
-		protein = 
-			smalloc(nselected*naminoacids*sizeof(float));
 		
 		for (unsigned i = 0; i < nselected; i++)
 		{	
@@ -217,9 +215,8 @@ static double gene_evaluate(void *g)
 		dct(protein, naminoacids);
 		
 		memcpy(&feature_matrix[wprotein*NCOEFFICIENTS], protein, NCOEFFICIENTS*sizeof(float));
-		
-		free(protein);
 	}
+	free(protein);
 	
 	GENE(g)->accuracy =
 		grid_search(feature_matrix, &GENE(g)->gamma, &GENE(g)->cost);
@@ -331,7 +328,7 @@ static void *gene_mutation(void *g)
 	
 	do
 	{
-		feature = randnum()%nfeatures + 1;
+		feature = randnum()%nfeatures;
 	} while (has_feature(g, feature));
 
 	GENE(g)->features[i] = feature;
