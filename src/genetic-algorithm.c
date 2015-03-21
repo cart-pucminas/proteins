@@ -27,7 +27,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <math.h> 
+#include <math.h>
 #include "predict.h"
 
 
@@ -134,7 +134,7 @@ static void *gene_random(void)
 /**
  * @brief Searches for SVM parameters.
  */
-static double grid_search(float *feature_matrix, double *bestg, double *bestc)
+static double grid_search(double *feature_matrix, double *bestg, double *bestc)
 {
 	struct svm_problem prob;
 	
@@ -189,19 +189,19 @@ static double grid_search(float *feature_matrix, double *bestg, double *bestc)
  */
 static double gene_evaluate(void *g)
 {
-	float *protein;        /* Selected aminoacids of a protein. */
-	float *feature_matrix; /* Feature matrix.                   */
+	double *protein;        /* Selected aminoacids of a protein. */
+	double *feature_matrix; /* Feature matrix.                   */
 	
 	/* Sanity check. */
 	assert(g != NULL);
 	
-	feature_matrix = smalloc(NCOEFFICIENTS*nproteins*sizeof(float));
+	feature_matrix = smalloc(NCOEFFICIENTS*nproteins*sizeof(double));
 	
 	/* Build feature matrix. */
-	protein =  smalloc(nselected*database.maxaminoacids*sizeof(float));
+	protein =  smalloc(nselected*database.maxaminoacids*sizeof(double));
 	for (unsigned wprotein = 0; wprotein < nproteins; wprotein++)
 	{
-		float *data;
+		double *data;
 		unsigned naminoacids;
 		
 		naminoacids = database.naminoacids[wprotein];
@@ -209,13 +209,14 @@ static double gene_evaluate(void *g)
 		for (unsigned i = 0; i < nselected; i++)
 		{	
 			data = &database.data[GENE(g)->features[i]][wprotein*database.maxaminoacids];
-			memcpy(&protein[i*naminoacids], data, naminoacids*sizeof(float));
+			memcpy(&protein[i*naminoacids], data, naminoacids*sizeof(double));
 		}
+	
+		dct(protein, nselected*naminoacids);
 		
-		dct(protein, naminoacids);
-		
-		memcpy(&feature_matrix[wprotein*NCOEFFICIENTS], protein, NCOEFFICIENTS*sizeof(float));
+		memcpy(&feature_matrix[wprotein*NCOEFFICIENTS], protein, NCOEFFICIENTS*sizeof(double));
 	}
+	
 	free(protein);
 	
 	GENE(g)->accuracy =
@@ -345,8 +346,8 @@ static void *gene_mutation(void *g)
  */
 static struct genome problem = 
 {
-	0.05,           /* Mutation rate.    */
-	0.80,           /* Crossover rate.   */
+	0.01,           /* Mutation rate.    */
+	0.65,           /* Crossover rate.   */
 	0.01,           /* Elitism rate.     */
 	0.90,           /* Replacement rate. */
 	gene_random,    /* random().         */
@@ -362,6 +363,5 @@ static struct genome problem =
 void predict(int popsize, int ngen)
 {
 	genetic_algorithm(&problem, popsize, ngen, 0
-					| GA_POPULATION_STATISTICS
-					| GA_MINIMIZATION);
+					| GA_POPULATION_STATISTICS);
 }
