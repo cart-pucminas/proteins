@@ -26,6 +26,7 @@
 #include <libsvm/svm.h>
 #include <stdlib.h>
 #include <string.h>
+#include <omp.h>
 #include <time.h>
 #include <math.h>
 #include "predict.h"
@@ -137,12 +138,13 @@ static void *gene_random(void)
 static double grid_search(double *feature_matrix, double *bestg, double *bestc)
 {
 	struct svm_problem prob;
+	double *coefficient_matrix; /* Coefficient matrix.  */
 	
 	/*
 	 * Adjust these
 	 * at your will.
 	 */
-	double step = 2;
+	int step = 2;
 	
 	double bestacc;
 	
@@ -151,35 +153,62 @@ static double grid_search(double *feature_matrix, double *bestg, double *bestc)
 	assert(bestg != NULL);
 	assert(bestc != NULL);
 	
-	buildProblem(database.labels, nproteins, feature_matrix, &prob, NCOEFFICIENTS);
-	
 	bestacc = 0, *bestg = 0, *bestc = 0;
 	
-	/* Search parameters. */
-	for (double cost = -5; cost < 15; cost = cost + step)
+	coefficient_matrix = smalloc(nproteins*NCOEFFICIENTS*sizeof(double));
+	
+	fprintf(stderr, "building coefficient matrix...\n");
+	
+	/* Build coefficient matrix. */
+	#pragma omp parallel
 	{
-		for (double gamma = 3; gamma > -15; gamma = gamma - step)
+		#pragma omp for
+		for (unsigned wprotein = 0; wprotein < nproteins; wprotein++)
 		{
-			double acc;    /* Accuracty. */
-			double gamma2; /* 2^gamma.   */
-			double cost2;  /* 2^cost.    */
+			dct(&coefficient_matrix[wprotein*NCOEFFICIENTS],
+				&feature_matrix[wprotein*database.maxaminoacids*nselected],
+				nselected*database.naminoacids[wprotein],
+				NCOEFFICIENTS);
+		}
+		
+		#pragma omp master
+		{
+			fprintf(stderr, "performing grid search...\n");
 			
-			gamma2 = pow(2, gamma);
-			cost2 = pow(2, cost);
-
-			acc = svm(&prob, gamma2, cost2);
-			
-			/* Best parameters found. */
-			if (acc >= bestacc)
+			buildProblem(database.labels, nproteins, feature_matrix, &prob, NCOEFFICIENTS);
+		}
+		#pragma omp barrier
+		
+		/* Search parameters. */
+		#pragma omp for
+		for (int cost = -5; cost < 15; cost = cost + step)
+		{
+			for (int gamma = 3; gamma > -15; gamma = gamma - step)
 			{
-				bestacc = acc; 
-				*bestc = cost2; 
-				*bestg = gamma2;
+				double acc;    /* Accuracty. */
+				double gamma2; /* 2^gamma.   */
+				double cost2;  /* 2^cost.    */
+				
+				gamma2 = pow(2, gamma);
+				cost2 = pow(2, cost);
+
+				acc = svm(&prob, gamma2, cost2);
+				
+				/* Best parameters found. */
+				#pragma omp critical
+				if (acc >= bestacc)
+				{
+					bestacc = acc; 
+					*bestc = cost2; 
+					*bestg = gamma2;
+				}
 			}
 		}
 	}
 	
+	/* House keeping. */
 	destroy_problem(&prob);
+	free(coefficient_matrix);
 	
 	return (bestacc);
 }
@@ -215,42 +244,41 @@ static void sort(unsigned *a, unsigned n)
  */
 static double gene_evaluate(void *g)
 {
-	double *protein;        /* Selected aminoacids of a protein. */
-	double *feature_matrix; /* Feature matrix.                   */
-	unsigned *selected;     /* Selected features.                */
+	double *feature_matrix;     /* Feature matrix.      */
+	unsigned *selected;         /* Selected features.   */
 	
 	/* Sanity check. */
 	assert(g != NULL);
 	
-	feature_matrix = smalloc(NCOEFFICIENTS*nproteins*sizeof(double));
+	feature_matrix =
+		smalloc(nproteins*database.maxaminoacids*nselected*sizeof(double));
 	selected = smalloc(nselected*sizeof(unsigned));
 	
 	memcpy(selected, GENE(g)->features, nselected*sizeof(unsigned));
 	
 	sort(selected, nselected);
 	
+	fprintf(stderr, "building feature matrix...\n");
+	
 	/* Build feature matrix. */
-	protein =  smalloc(nselected*database.maxaminoacids*sizeof(double));
 	for (unsigned wprotein = 0; wprotein < nproteins; wprotein++)
 	{
 		double *data;
+		unsigned base;
 		unsigned naminoacids;
+		
+		base = wprotein*database.maxaminoacids*nselected;
 		
 		naminoacids = database.naminoacids[wprotein];
 		
 		for (unsigned i = 0; i < nselected; i++)
 		{	
 			data = &database.data[selected[i]][wprotein*database.maxaminoacids];
-			memcpy(&protein[i*naminoacids], data, naminoacids*sizeof(double));
+			memcpy(&feature_matrix[base + i*naminoacids],
+				   data,
+				   naminoacids*sizeof(double));
 		}
-
-		dct(protein, nselected*naminoacids);
-		
-		memcpy(&feature_matrix[wprotein*NCOEFFICIENTS],
-			protein,
-			NCOEFFICIENTS*sizeof(double));
 	}
-	free(protein);
 	
 	GENE(g)->accuracy =
 		grid_search(feature_matrix, &GENE(g)->gamma, &GENE(g)->cost);

@@ -32,19 +32,19 @@
  * @param x Vector where the discrete cosine transform should be applied.
  * @param n Dimension of the vector.
  */
-void dct(double *x, unsigned n)
-{
-	for (unsigned i = 0; i < n; i++)
+void dct(double *b, double *x, unsigned n, unsigned m)
+{	
+	for (unsigned i = 0; i < m; i++)
 	{
 		for (unsigned j = 0; j < n; j++)
 		{
 			if (i == 0)
 			{
-				x[i] += 1/sqrt(n)*x[j];
+				b[i] += 1/sqrt(n)*x[j];
 				continue;
 			}
 			
-			x[i] += sqrt(2.0/n)*cos(i*M_PI/(2.0*n)*(2.0*j + 1))*x[j];
+			b[i] += sqrt(2.0/n)*cos(i*M_PI/(2.0*n)*(2.0*j + 1))*x[j];
 		}
 	}
 }

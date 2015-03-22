@@ -36,7 +36,7 @@
 	};
 	
 	/* Forward definitions. */
-	extern void dct(double *, unsigned);
+	extern void dct(double *, double *, unsigned, unsigned);
 	extern void database_read(const char **, unsigned, unsigned);
 	extern void database_parse(const char **, unsigned, unsigned);
 	extern void database_destroy(void);
