@@ -137,31 +137,23 @@ static void *gene_random(void)
  */
 static double grid_search(double *feature_matrix, double *bestg, double *bestc)
 {
-	struct svm_problem prob;
-	double *coefficient_matrix; /* Coefficient matrix.  */
-	
-	/*
-	 * Adjust these
-	 * at your will.
-	 */
-	int step = 2;
-	
-	double bestacc;
+	struct svm_problem prob;    /* SVM problem.        */
+	double *coefficient_matrix; /* Coefficient matrix. */
+	const int step = 2;         /* Grid search step.   */
+	double bestacc;             /* Best accuracy.      */
 	
 	/* Sanity check. */
 	assert(feature_matrix != NULL);
 	assert(bestg != NULL);
 	assert(bestc != NULL);
 	
-	bestacc = 0, *bestg = 0, *bestc = 0;
+	bestacc = 0;
 	
 	coefficient_matrix = smalloc(nproteins*NCOEFFICIENTS*sizeof(double));
 	
-	fprintf(stderr, "building coefficient matrix...\n");
-	
-	/* Build coefficient matrix. */
 	#pragma omp parallel
 	{
+		/* Build coefficient matrix. */
 		#pragma omp for
 		for (unsigned wprotein = 0; wprotein < nproteins; wprotein++)
 		{
@@ -172,11 +164,7 @@ static double grid_search(double *feature_matrix, double *bestg, double *bestc)
 		}
 		
 		#pragma omp master
-		{
-			fprintf(stderr, "performing grid search...\n");
-			
-			buildProblem(database.labels, nproteins, feature_matrix, &prob, NCOEFFICIENTS);
-		}
+		buildProblem(database.labels, nproteins, coefficient_matrix, &prob, NCOEFFICIENTS);
 		#pragma omp barrier
 		
 		/* Search parameters. */
@@ -188,12 +176,12 @@ static double grid_search(double *feature_matrix, double *bestg, double *bestc)
 				double acc;    /* Accuracty. */
 				double gamma2; /* 2^gamma.   */
 				double cost2;  /* 2^cost.    */
-				
+						
 				gamma2 = pow(2, gamma);
 				cost2 = pow(2, cost);
 
 				acc = svm(&prob, gamma2, cost2);
-				
+							
 				/* Best parameters found. */
 				#pragma omp critical
 				if (acc >= bestacc)
@@ -244,8 +232,10 @@ static void sort(unsigned *a, unsigned n)
  */
 static double gene_evaluate(void *g)
 {
-	double *feature_matrix;     /* Feature matrix.      */
-	unsigned *selected;         /* Selected features.   */
+	double *feature_matrix; /* Feature matrix.    */
+	unsigned *selected;     /* Selected features. */
+	
+	fprintf(stderr, "gene_evaluate()\n");
 	
 	/* Sanity check. */
 	assert(g != NULL);
@@ -257,8 +247,6 @@ static double gene_evaluate(void *g)
 	memcpy(selected, GENE(g)->features, nselected*sizeof(unsigned));
 	
 	sort(selected, nselected);
-	
-	fprintf(stderr, "building feature matrix...\n");
 	
 	/* Build feature matrix. */
 	for (unsigned wprotein = 0; wprotein < nproteins; wprotein++)
@@ -304,6 +292,8 @@ static void *gene_crossover(void *gene1, void *gene2, int n)
 	unsigned nbegin, nmiddle, nend; /* Size of gene parts.      */
 	unsigned *begin, *middle, *end; /* Gene parts.              */
 	struct gene *offspring;         /* Offspring.               */
+	
+	fprintf(stderr, "gene_crossover()\n");
 	
 	/* Sanity check. */
 	assert(gene1 != NULL);
