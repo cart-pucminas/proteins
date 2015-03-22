@@ -164,31 +164,30 @@ static double grid_search(double *feature_matrix, double *bestg, double *bestc)
 		}
 		
 		#pragma omp master
-		buildProblem(database.labels, nproteins, coefficient_matrix, &prob, NCOEFFICIENTS);
-		#pragma omp barrier
-		
-		/* Search parameters. */
-		#pragma omp for
-		for (int cost = -5; cost < 15; cost = cost + step)
 		{
-			for (int gamma = 3; gamma > -15; gamma = gamma - step)
+			buildProblem(database.labels, nproteins, coefficient_matrix, &prob, NCOEFFICIENTS);
+			
+			/* Search parameters. */
+			for (int cost = -5; cost < 15; cost = cost + step)
 			{
-				double acc;    /* Accuracty. */
-				double gamma2; /* 2^gamma.   */
-				double cost2;  /* 2^cost.    */
-						
-				gamma2 = pow(2, gamma);
-				cost2 = pow(2, cost);
-
-				acc = svm(&prob, gamma2, cost2);
-							
-				/* Best parameters found. */
-				#pragma omp critical
-				if (acc >= bestacc)
+				for (int gamma = 3; gamma > -15; gamma = gamma - step)
 				{
-					bestacc = acc; 
-					*bestc = cost2; 
-					*bestg = gamma2;
+					double acc;    /* Accuracty. */
+					double gamma2; /* 2^gamma.   */
+					double cost2;  /* 2^cost.    */
+							
+					gamma2 = pow(2, gamma);
+					cost2 = pow(2, cost);
+
+					acc = svm(&prob, gamma2, cost2);
+								
+					/* Best parameters found. */
+					if (acc >= bestacc)
+					{
+						bestacc = acc; 
+						*bestc = cost2; 
+						*bestg = gamma2;
+					}
 				}
 			}
 		}
