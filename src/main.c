@@ -102,7 +102,7 @@ int main(int argc, char **argv)
 	 * Parse database in order to determine the largest
 	 * number of amino acids among all proteins.
 	 */
-	database_parse(filenames, nproteins, nfeatures);
+	database_parse(filenames, nproteins);
 	
 	fprintf(stderr, "info: reading database...\n");
 	

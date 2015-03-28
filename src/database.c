@@ -41,7 +41,7 @@
  * @todo Check for bad file format.
  */
 void database_parse
-(const char **filenames, unsigned nproteins, unsigned nfeatures)
+(const char **filenames, unsigned nproteins)
 {
 	/* Sanity checks. */
 	assert(filenames != NULL);
