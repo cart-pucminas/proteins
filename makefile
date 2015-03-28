@@ -24,7 +24,7 @@ export AR = ar
 # Toolchain configuration.
 CXXFLAGS=
 export CFLAGS = -I $(INCDIR) -ansi -pedantic -Wall -Wextra -Werror -std=c99
-export CFLAGS += -D NDEBUG -O3
+export CFLAGS += -D NDEBUG
 
 # Builds everything.
 all: libraries
