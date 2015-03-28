@@ -22,9 +22,9 @@ export CC = gcc
 export AR = ar
 
 # Toolchain configuration.
-CXXFLAGS=
+CXXFLAGS= -D NDEBUG -O3
 export CFLAGS = -I $(INCDIR) -ansi -pedantic -Wall -Wextra -Werror -std=c99
-export CFLAGS += -D NDEBUG
+export CFLAGS += -D NDEBUG -O3
 
 # Builds everything.
 all: libraries
@@ -39,3 +39,4 @@ libraries:
 # Cleans compilation files.
 clean:
 	cd $(LIBSRCDIR) && $(MAKE) clean
+	cd $(SRCDIR) && $(MAKE) clean

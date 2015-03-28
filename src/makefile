@@ -23,13 +23,13 @@ OBJ = $(SRC:.c=.o)
 
 # Builds everything.
 all: $(OBJ)
-	g++ *.o -fopenmp  -o $(BINDIR)/$(EXEC) $(LIBS)
+	$(CXX) $(OBJ) -fopenmp  -o $(BINDIR)/$(EXEC) $(LIBS)
 	
 # Builds object file from C source file.
 %.o: %.c
-	$(CC) -fopenmp $< $(CFLAGS) -c -o $@
+	$(CC) $(CFLAGS) -fopenmp $< -c -o $@
 	
 # Cleans compilation files.
 clean:
-	@rm -f *.o
+	@rm -f $(OBJ)
 	@rm -f $(BINDIR)/$(EXEC)
