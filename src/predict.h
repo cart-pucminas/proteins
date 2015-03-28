@@ -40,7 +40,7 @@
 	extern void database_read(const char **, unsigned, unsigned);
 	extern void database_parse(const char **, unsigned, unsigned);
 	extern void database_destroy(void);
-	extern double svm(struct svm_problem *, double, double);
+	extern double svm(const struct svm_problem *, double, double);
 	extern void buildProblem(unsigned *, unsigned, double *, struct svm_problem *, unsigned);
 	extern void destroy_problem(struct svm_problem *);
 	

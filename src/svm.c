@@ -30,7 +30,7 @@
 #define NR_FOLD 10
 
 
-static double do_cross_validation(struct svm_problem *prob, struct svm_parameter *param)
+static double do_cross_validation(const struct svm_problem *prob, struct svm_parameter *param)
 {
 	double accuracy;
 	int total_correct;
@@ -97,7 +97,7 @@ void destroy_problem(struct svm_problem *prob)
 	free(prob->x);
 }
 
-double svm(struct svm_problem *prob, double c, double gamma)
+double svm(const struct svm_problem *prob, double c, double gamma)
 {
 	double accuracy;
 	struct svm_parameter param;
