@@ -150,49 +150,47 @@ static double grid_search(double *feature_matrix, double *bestg, double *bestc)
 	bestacc = 0;
 	
 	coefficient_matrix = smalloc(nproteins*NCOEFFICIENTS*sizeof(double));
-	
-	#pragma omp parallel
-	{
-		/* Build coefficient matrix. */
-		#pragma omp for
-		for (unsigned wprotein = 0; wprotein < nproteins; wprotein++)
-		{
-			dct(&coefficient_matrix[wprotein*NCOEFFICIENTS],
-				&feature_matrix[wprotein*database.maxaminoacids*nselected],
-				nselected*database.naminoacids[wprotein],
-				NCOEFFICIENTS);
-		}
-		
-		#pragma omp master
-		{
-			buildProblem(database.labels, nproteins, coefficient_matrix, &prob, NCOEFFICIENTS);
-			
-			/* Search parameters. */
-			for (int cost = -5; cost < 15; cost = cost + step)
-			{
-				for (int gamma = 3; gamma > -15; gamma = gamma - step)
-				{
-					double acc;    /* Accuracty. */
-					double gamma2; /* 2^gamma.   */
-					double cost2;  /* 2^cost.    */
-							
-					gamma2 = pow(2, gamma);
-					cost2 = pow(2, cost);
 
-					acc = svm(&prob, gamma2, cost2);
-								
-					/* Best parameters found. */
-					if (acc >= bestacc)
-					{
-						bestacc = acc; 
-						*bestc = cost2; 
-						*bestg = gamma2;
-					}
-				}
+	/* Build coefficient matrix. */
+	#pragma omp parallel for default(shared)
+	for (unsigned wprotein = 0; wprotein < nproteins; wprotein++)
+	{
+		dct(&coefficient_matrix[wprotein*NCOEFFICIENTS],
+			&feature_matrix[wprotein*database.maxaminoacids*nselected],
+			nselected*database.naminoacids[wprotein],
+			NCOEFFICIENTS);
+	}
+	
+	buildProblem(database.labels, nproteins, coefficient_matrix, &prob, NCOEFFICIENTS);
+
+	/* Search parameters. */
+	#pragma omp parallel for default(shared)
+	for (int cost = -5; cost < 15; cost += step)
+	{
+		double cost2;
+
+		cost2 = pow(2, cost);
+
+		for (int gamma = 3; gamma > -15; gamma -= step)
+		{
+			double acc;    /* Accuracty. */
+			double gamma2; /* 2^gamma.   */
+	
+			gamma2 = pow(2, gamma);
+				
+			acc = svm(&prob, gamma2, cost2);
+											
+			/* Best parameters found. */
+			#pragma omp critical
+			if (acc > bestacc)
+			{
+				bestacc = acc; 
+				*bestc = cost2; 
+				*bestg = gamma2;
 			}
 		}
 	}
-	
+
 	/* House keeping. */
 	destroy_problem(&prob);
 	free(coefficient_matrix);
