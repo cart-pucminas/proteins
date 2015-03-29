@@ -353,7 +353,9 @@ static void *gene_crossover(void *gene1, void *gene2, int n)
 		memcpy(middle, GENE(gene1)->features + nbegin, nmiddle*sizeof(unsigned));
 		memcpy(end, &GENE(gene2)->features + nbegin + nmiddle, nend*sizeof(unsigned));
 	}
-	
+
+#ifndef NDEBUG
+
 	for (unsigned i = 0; i < nmiddle; i++)
 	{
 		for (unsigned j = 0; j < nbegin; j++)
@@ -408,7 +410,9 @@ static void *gene_crossover(void *gene1, void *gene2, int n)
 			}
 		}
 	}
-		
+
+#endif
+	
 	memcpy(offspring->features, begin, nbegin*sizeof(unsigned)); 
 	memcpy(offspring->features + nbegin, middle, nmiddle*sizeof(unsigned));
 	memcpy(offspring->features + nbegin + nmiddle, end, nend*sizeof(unsigned));
