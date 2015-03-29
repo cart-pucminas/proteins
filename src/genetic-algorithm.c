@@ -151,42 +151,47 @@ static double grid_search(double *feature_matrix, double *bestg, double *bestc)
 	
 	coefficient_matrix = smalloc(nproteins*NCOEFFICIENTS*sizeof(double));
 
-	/* Build coefficient matrix. */
-	#pragma omp parallel for default(shared)
-	for (unsigned wprotein = 0; wprotein < nproteins; wprotein++)
+	#pragma omp parallel default(shared)
 	{
-		dct(&coefficient_matrix[wprotein*NCOEFFICIENTS],
-			&feature_matrix[wprotein*database.maxaminoacids*nselected],
-			nselected*database.naminoacids[wprotein],
-			NCOEFFICIENTS);
-	}
-	
-	buildProblem(database.labels, nproteins, coefficient_matrix, &prob, NCOEFFICIENTS);
-
-	/* Search parameters. */
-	#pragma omp parallel for default(shared)
-	for (int cost = -5; cost < 15; cost += step)
-	{
-		double cost2;
-
-		cost2 = pow(2, cost);
-
-		for (int gamma = 3; gamma > -15; gamma -= step)
+		/* Build coefficient matrix. */
+		#pragma omp for schedule(static)
+		for (unsigned wprotein = 0; wprotein < nproteins; wprotein++)
 		{
-			double acc;    /* Accuracty. */
-			double gamma2; /* 2^gamma.   */
-	
-			gamma2 = pow(2, gamma);
-				
-			acc = svm(&prob, gamma2, cost2);
-											
-			/* Best parameters found. */
-			#pragma omp critical
-			if (acc > bestacc)
+			dct(&coefficient_matrix[wprotein*NCOEFFICIENTS],
+				&feature_matrix[wprotein*database.maxaminoacids*nselected],
+				nselected*database.naminoacids[wprotein],
+				NCOEFFICIENTS);
+		}
+		
+		#pragma omp master
+		buildProblem(database.labels, nproteins, coefficient_matrix, &prob, NCOEFFICIENTS);
+		#pragma omp barrier
+
+		/* Search parameters. */
+		#pragma omp for schedule(dynamic)
+		for (int cost = -5; cost < 15; cost += step)
+		{
+			double cost2;
+
+			cost2 = pow(2, cost);
+			
+			for (int gamma = 3; gamma > -15; gamma -= step)
 			{
-				bestacc = acc; 
-				*bestc = cost2; 
-				*bestg = gamma2;
+				double acc;    /* Accuracty. */
+				double gamma2; /* 2^gamma.   */
+		
+				gamma2 = pow(2, gamma);
+				
+				acc = svm(&prob, cost2, gamma2);
+														
+				/* Best parameters found. */
+				#pragma omp critical
+				if (acc > bestacc)
+				{
+					bestacc = acc; 
+					*bestc = cost2; 
+					*bestg = gamma2;
+				}
 			}
 		}
 	}
