@@ -19,10 +19,9 @@
  */
 
 #include <assert.h>
-#include <mylibc/ai.h>
-#include <mylibc/graph.h>
-#include <mylibc/matrix.h>
-#include <mylibc/util.h>
+#include <mylib/ai.h>
+#include <mylib/matrix.h>
+#include <mylib/util.h>
 #include <libsvm/svm.h>
 #include <stdlib.h>
 #include <string.h>
@@ -475,5 +474,5 @@ static struct genome problem =
 void predict(int popsize, int ngen)
 {
 	genetic_algorithm(&problem, popsize, ngen, 0
-					| GA_POPULATION_STATISTICS);
+					| GA_OPTIONS_STATISTICS);
 }

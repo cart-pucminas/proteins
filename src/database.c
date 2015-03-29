@@ -23,7 +23,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <mylibc/util.h>
+#include <mylib/util.h>
 #include "predict.h"
 
 /**

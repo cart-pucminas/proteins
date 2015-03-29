@@ -24,7 +24,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include <libsvm/svm.h>
-#include <mylibc/util.h>
+#include <mylib/util.h>
 #include "predict.h"
 
 #define NR_FOLD 10

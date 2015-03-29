@@ -4,15 +4,15 @@
 #
 
 # Phony list.
-.PHONY: mylibc
+.PHONY: mylib
 .PHONY: libsvm
 
 # Builds everything.
-all: mylibc libsvm
+all: mylib libsvm
 
 # Builds My C Library.
-mylibc:
-	cd mylibc/ && $(MAKE) install PREFIX=$(CURDIR)/..
+mylib:
+	cd mylib/ && $(MAKE) install PREFIX=$(CURDIR)/..
 	
 # Builds SVM library.
 libsvm:
@@ -20,5 +20,5 @@ libsvm:
 
 # Cleans compilation files.
 clean:
-	cd mylibc/ && $(MAKE) uninstall PREFIX=$(CURDIR)/..
+	cd mylib/ && $(MAKE) uninstall PREFIX=$(CURDIR)/..
 	cd libsvm/ && $(MAKE) clean
