@@ -296,7 +296,7 @@ static void *gene_crossover(void *gene1, void *gene2, int n)
 	struct gene *offspring;         /* Offspring.               */
 	
 	fprintf(stderr, "gene_crossover()\n");
-	
+
 	/* Sanity check. */
 	assert(gene1 != NULL);
 	assert(gene2 != NULL);
@@ -304,14 +304,35 @@ static void *gene_crossover(void *gene1, void *gene2, int n)
 	
 	offspring = gene_create();
 	
-	/* Crossover points. */
-	point1 = randnum()%(n - 1);
-	point2 = randnum()%(n - point1 - 1) + point1;
+	/* Crossover points. */		
+	do
+	{
+		point1 = randnum()%nselected;
+		point2 = randnum()%nselected;
+		
+	}while(((point1 <= 1) && (abs(point1 - point2) <= 1) && (abs(point2 - nselected )<= 1)));
+
+
+	unsigned aux;
+	if(point1 > point2)
+	{
+		aux = point1;
+		point1 = point2;
+		point2 = aux;
+	}
 	
+	#pragma omp master
+	{
+		printf("Point 1 : %d ",point1);
+		printf("Point 2 : %d \n",point2);
+	}
 	/* Size of gene parts. */
 	nbegin = point1;
 	nmiddle = point2 - point1;
-	nend = n -(nbegin+nmiddle);
+	nend = nselected -(nbegin+nmiddle);
+	printf("Size of gene parts: %d ",nbegin);
+	printf("%d ",nmiddle);
+	printf("%d \n",nend);
 	
 	/* Gene parts. */
 	begin = smalloc(nbegin*sizeof(unsigned));
@@ -319,7 +340,10 @@ static void *gene_crossover(void *gene1, void *gene2, int n)
 	end = smalloc(nend*sizeof(unsigned));
 	
 	memcpy(begin, GENE(gene1)->features, nbegin*sizeof(unsigned));
-	memcpy(middle, GENE(gene2)->features + nbegin, nmiddle*sizeof(unsigned));
+	if(n == 0)
+		memcpy(middle, GENE(gene2)->features + nbegin, nmiddle*sizeof(unsigned));
+	else
+		memcpy(middle, GENE(gene1)->features + nbegin, nmiddle*sizeof(unsigned));
 	memcpy(end, GENE(gene1)->features + (nbegin - nmiddle), nend*sizeof(unsigned));
 	
 	for (unsigned i = 0; i < nmiddle; i++)
@@ -328,12 +352,23 @@ static void *gene_crossover(void *gene1, void *gene2, int n)
 		{
 			if (middle[i] == begin[j] )
 			{
-				for (int k = 0; k < n; k++ )
+				for (unsigned k = 0; k < nselected; k++ )
 				{
-					if (GENE(gene2)->features[k] == begin[j])
+					if(n == 0)
 					{
-						begin[j] = GENE(gene1)->features[k];
-						break;
+						if (GENE(gene2)->features[k] == begin[j])
+						{
+								begin[j] = GENE(gene1)->features[k];
+								break;
+						}
+					}
+					else
+					{
+						if (GENE(gene1)->features[k] == begin[j])
+						{
+								begin[j] = GENE(gene2)->features[k];
+								break;
+						}
 					}
 				}
 			}
@@ -343,21 +378,36 @@ static void *gene_crossover(void *gene1, void *gene2, int n)
 		{
 			if (middle[i] == end[j])
 			{
-				for (int k = 0; k < n; k++ )
+				for (unsigned k = 0; k < nselected; k++ )
 				{
-					if (GENE(gene2)->features[k] == end[j])
+					if(n == 0)
 					{
-						end[j] = GENE(gene1)->features[k];
-						break;
+						if (GENE(gene2)->features[k] == end[j])
+						{
+							end[j] = GENE(gene1)->features[k];
+							break;
+						}
+					}
+					else
+					{
+						if (GENE(gene1)->features[k] == end[j])
+						{
+							end[j] = GENE(gene2)->features[k];
+							break;
+						}
 					}
 				}
 			}
 		}
 	}
+		
+		memcpy(offspring->features, begin, nbegin*sizeof(unsigned)); 
+		memcpy(offspring->features + nbegin, middle, nmiddle*sizeof(unsigned));
+		memcpy(offspring->features + nbegin + nmiddle, end, nend*sizeof(unsigned));
+		
+		
+	fprintf(stderr, "end gene_crossover()\n");
 
-	memcpy(offspring->features, begin, nbegin*sizeof(unsigned)); 
-	memcpy(offspring->features + nbegin, middle, nmiddle*sizeof(unsigned));
-	memcpy(offspring->features + nbegin + nmiddle, end, nend*sizeof(unsigned));
 	
 	/* House keeping. */
 	free(begin);
