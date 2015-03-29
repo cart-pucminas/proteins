@@ -340,12 +340,19 @@ static void *gene_crossover(void *gene1, void *gene2, int n)
 	middle = smalloc(nmiddle*sizeof(unsigned));
 	end = smalloc(nend*sizeof(unsigned));
 	
-	memcpy(begin, GENE(gene1)->features, nbegin*sizeof(unsigned));
-	memcpy(middle, 
-		   (n == 0) ?
-				GENE(gene2)->features + nbegin : GENE(gene1)->features + nbegin,
-		   nmiddle*sizeof(unsigned));
-	memcpy(end, GENE(gene1)->features + (nbegin - nmiddle), nend*sizeof(unsigned));
+	if (n == 0)
+	{
+		memcpy(begin, GENE(gene1)->features, nbegin*sizeof(unsigned));
+		memcpy(middle, GENE(gene2)->features + nbegin, nmiddle*sizeof(unsigned));
+		memcpy(end, &GENE(gene1)->features + nbegin + nmiddle, nend*sizeof(unsigned));
+	}
+	
+	else
+	{
+		memcpy(begin, GENE(gene2)->features, nbegin*sizeof(unsigned));
+		memcpy(middle, GENE(gene1)->features + nbegin, nmiddle*sizeof(unsigned));
+		memcpy(end, &GENE(gene2)->features + nbegin + nmiddle, nend*sizeof(unsigned));
+	}
 	
 	for (unsigned i = 0; i < nmiddle; i++)
 	{
@@ -405,7 +412,6 @@ static void *gene_crossover(void *gene1, void *gene2, int n)
 	memcpy(offspring->features, begin, nbegin*sizeof(unsigned)); 
 	memcpy(offspring->features + nbegin, middle, nmiddle*sizeof(unsigned));
 	memcpy(offspring->features + nbegin + nmiddle, end, nend*sizeof(unsigned));
-		
 		
 	fprintf(stderr, "end gene_crossover()\n");
 	
