@@ -69,8 +69,8 @@ extern "C" {
 					/* 0 if svm_model is created by svm_train */
 	};
 
-	struct svm_model *svm_train(const struct svm_problem *, const struct svm_parameter *);
-	void svm_cross_validation(const struct svm_problem *, const struct svm_parameter *, int, double *);
+	struct svm_model *svm_train(const struct svm_problem *, const struct svm_parameter *, unsigned *);
+	void svm_cross_validation(const struct svm_problem *, const struct svm_parameter *, int, double *, unsigned *);
 	int svm_save_model(const char *, const struct svm_model *);
 	struct svm_model *svm_load_model(const char *);
 	int svm_get_svm_type(const struct svm_model *);

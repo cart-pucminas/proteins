@@ -72,8 +72,8 @@ struct svm_model
 				/* 0 if svm_model is created by svm_train */
 };
 
-struct svm_model *svm_train(const struct svm_problem *prob, const struct svm_parameter *param);
-void svm_cross_validation(const struct svm_problem *prob, const struct svm_parameter *param, int nr_fold, double *target);
+struct svm_model *svm_train(const struct svm_problem *prob, const struct svm_parameter *param, unsigned *);
+void svm_cross_validation(const struct svm_problem *prob, const struct svm_parameter *param, int nr_fold, double *target, unsigned *);
 
 int svm_save_model(const char *model_file_name, const struct svm_model *model);
 struct svm_model *svm_load_model(const char *model_file_name);

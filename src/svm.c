@@ -30,13 +30,14 @@
 #define NR_FOLD 10
 
 
-static double do_cross_validation(const struct svm_problem *prob, struct svm_parameter *param)
+static double do_cross_validation(const struct svm_problem *prob, const struct svm_parameter *param)
 {
+	unsigned seedp = 0;
 	double accuracy;
 	int total_correct;
 	double *target = smalloc(prob->l*sizeof(double));
 
-	svm_cross_validation(prob, param, NR_FOLD, target);
+	svm_cross_validation(prob, param, NR_FOLD, target, &seedp);
 	
 	/* Compute accuracy. */
 	total_correct = 0;
@@ -45,7 +46,7 @@ static double do_cross_validation(const struct svm_problem *prob, struct svm_par
 		if (target[i] == prob->y[i])
 			total_correct++;
 	}
-	accuracy = 100.0*total_correct/prob->l;
+	accuracy = (100.0*total_correct)/prob->l;
 	
 	free(target);
 	
@@ -72,7 +73,7 @@ void buildProblem(unsigned *labels, unsigned nproteins, double *data, struct svm
 		prob->x[i] = &prob->x_space[j];
 		prob->y[i] = labels[i];
 		
-		idx = 0;
+		idx = 1;
 		inst_max_index = -1;
 		
 		for (unsigned k = 0; k < ncoeficients; k++)

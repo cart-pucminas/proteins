@@ -38,8 +38,6 @@ static inline double powi(double base, int times)
 #define TAU 1e-12
 #define Malloc(type,n) (type *)malloc((n)*sizeof(type))
 
-static unsigned seed = 0;
-
 static void print_string_stdout(const char *s)
 {
 	fputs(s,stdout);
@@ -1893,7 +1891,7 @@ static void multiclass_probability(int k, double **r, double *p)
  */
 static void svm_binary_svc_probability(
 	const svm_problem *prob, const svm_parameter *param,
-	double Cp, double Cn, double& probA, double& probB)
+	double Cp, double Cn, double& probA, double& probB, unsigned *seedp)
 {
 	int i;
 	int nr_fold = 5;
@@ -1904,7 +1902,7 @@ static void svm_binary_svc_probability(
 	for(i=0;i<prob->l;i++) perm[i]=i;
 	for(i=0;i<prob->l;i++)
 	{
-		int j = i+rand_r(&seed)%(prob->l-i);
+		int j = i+rand_r(seedp)%(prob->l-i);
 		swap(perm[i],perm[j]);
 	}
 	for(i=0;i<nr_fold;i++)
@@ -1959,7 +1957,7 @@ static void svm_binary_svc_probability(
 			subparam.weight_label[1]=-1;
 			subparam.weight[0]=Cp;
 			subparam.weight[1]=Cn;
-			struct svm_model *submodel = svm_train(&subprob,&subparam);
+			struct svm_model *submodel = svm_train(&subprob,&subparam, seedp);
 			for(j=begin;j<end;j++)
 			{
 				svm_predict_values(submodel,prob->x[perm[j]],&(dec_values[perm[j]]));
@@ -1981,7 +1979,7 @@ static void svm_binary_svc_probability(
  * 
  */
 static double svm_svr_probability(
-	const svm_problem *prob, const svm_parameter *param)
+	const svm_problem *prob, const svm_parameter *param, unsigned *seedp)
 {
 	int i;
 	int nr_fold = 5;
@@ -1990,7 +1988,7 @@ static double svm_svr_probability(
 
 	svm_parameter newparam = *param;
 	newparam.probability = 0;
-	svm_cross_validation(prob,&newparam,nr_fold,ymv);
+	svm_cross_validation(prob,&newparam,nr_fold,ymv, seedp);
 	for(i=0;i<prob->l;i++)
 	{
 		ymv[i]=prob->y[i]-ymv[i];
@@ -2093,7 +2091,7 @@ static void svm_group_classes(const svm_problem *prob, int *nr_class_ret, int **
 /**
  * 
  */
-svm_model *svm_train(const svm_problem *prob, const svm_parameter *param)
+svm_model *svm_train(const svm_problem *prob, const svm_parameter *param, unsigned *seedp)
 {
 	svm_model *model = Malloc(svm_model,1);
 	model->param = *param;
@@ -2115,7 +2113,7 @@ svm_model *svm_train(const svm_problem *prob, const svm_parameter *param)
 		    param->svm_type == NU_SVR))
 		{
 			model->probA = Malloc(double,1);
-			model->probA[0] = svm_svr_probability(prob,param);
+			model->probA[0] = svm_svr_probability(prob,param, seedp);
 		}
 
 		decision_function f = svm_train_one(prob,param,0,0);
@@ -2216,7 +2214,7 @@ svm_model *svm_train(const svm_problem *prob, const svm_parameter *param)
 				}
 
 				if(param->probability)
-					svm_binary_svc_probability(&sub_prob,param,weighted_C[i],weighted_C[j],probA[p],probB[p]);
+					svm_binary_svc_probability(&sub_prob,param,weighted_C[i],weighted_C[j],probA[p],probB[p], seedp);
 
 				f[p] = svm_train_one(&sub_prob,param,weighted_C[i],weighted_C[j]);
 				for(k=0;k<ci;k++)
@@ -2340,7 +2338,7 @@ svm_model *svm_train(const svm_problem *prob, const svm_parameter *param)
 /**
  * 
  */
-void svm_cross_validation(const svm_problem *prob, const svm_parameter *param, int nr_fold, double *target)
+void svm_cross_validation(const svm_problem *prob, const svm_parameter *param, int nr_fold, double *target, unsigned *seedp)
 {
 	int i;
 	int *fold_start;
@@ -2372,7 +2370,7 @@ void svm_cross_validation(const svm_problem *prob, const svm_parameter *param, i
 		for (c=0; c<nr_class; c++) 
 			for(i=0;i<count[c];i++)
 			{
-				int j = i+rand_r(&seed)%(count[c]-i);
+				int j = i+rand_r(seedp)%(count[c]-i);
 				swap(index[start[c]+j],index[start[c]+i]);
 			}
 		for(i=0;i<nr_fold;i++)
@@ -2409,7 +2407,7 @@ void svm_cross_validation(const svm_problem *prob, const svm_parameter *param, i
 		for(i=0;i<l;i++) perm[i]=i;
 		for(i=0;i<l;i++)
 		{
-			int j = i+rand_r(&seed)%(l-i);
+			int j = i+rand_r(seedp)%(l-i);
 			swap(perm[i],perm[j]);
 		}
 		for(i=0;i<=nr_fold;i++)
@@ -2440,7 +2438,7 @@ void svm_cross_validation(const svm_problem *prob, const svm_parameter *param, i
 			subprob.y[k] = prob->y[perm[j]];
 			++k;
 		}
-		struct svm_model *submodel = svm_train(&subprob,param);
+		struct svm_model *submodel = svm_train(&subprob,param, seedp);
 		if(param->probability && 
 		   (param->svm_type == C_SVC || param->svm_type == NU_SVC))
 		{
