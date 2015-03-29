@@ -174,8 +174,8 @@ void *genetic_algorithm(struct genome *_g, int _popsize, int ngen, int options)
 		/* Print population statistics. */
 		if (options & GA_POPULATION_STATISTICS)
 		{
-			mean = 0;
 			bestorg = ARRAY(pop, 0);
+			mean = bestorg->fitness;
 			for (i = 1; i < popsize; i++)
 			{
 				mean += ORGANISM(ARRAY(pop, i))->fitness;
