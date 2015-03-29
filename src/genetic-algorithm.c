@@ -316,7 +316,7 @@ static void *gene_crossover(void *gene1, void *gene2, int n)
 			point2 = randnum()%nselected;
 		} while ((point1<=1)||(abs(point1-point2)<=1)||((nselected-point2)<= 1));
 
-		if(point1 > point2)
+		if (point1 > point2)
 		{
 			tmp = point1;
 			point1 = point2;
@@ -324,16 +324,10 @@ static void *gene_crossover(void *gene1, void *gene2, int n)
 		}
 	}
 	
-	fprintf(stderr, "Point 1 : %d ",point1);
-	fprintf(stderr, "Point 2 : %d \n",point2);
-	
 	/* Size of gene parts. */
 	nbegin = point1;
 	nmiddle = point2 - point1;
 	nend = nselected -(nbegin+nmiddle);
-	fprintf(stderr, "Size of gene parts: %d ",nbegin);
-	fprintf(stderr, "%d ",nmiddle);
-	fprintf(stderr, "%d \n",nend);
 	
 	/* Gene parts. */
 	begin = smalloc(nbegin*sizeof(unsigned));
@@ -344,17 +338,20 @@ static void *gene_crossover(void *gene1, void *gene2, int n)
 	{
 		memcpy(begin, GENE(gene1)->features, nbegin*sizeof(unsigned));
 		memcpy(middle, GENE(gene2)->features + nbegin, nmiddle*sizeof(unsigned));
-		memcpy(end, &GENE(gene1)->features + nbegin + nmiddle, nend*sizeof(unsigned));
+		memcpy(end, GENE(gene1)->features + nbegin + nmiddle, nend*sizeof(unsigned));
 	}
 	
 	else
 	{
 		memcpy(begin, GENE(gene2)->features, nbegin*sizeof(unsigned));
 		memcpy(middle, GENE(gene1)->features + nbegin, nmiddle*sizeof(unsigned));
-		memcpy(end, &GENE(gene2)->features + nbegin + nmiddle, nend*sizeof(unsigned));
+		memcpy(end, GENE(gene2)->features + nbegin + nmiddle, nend*sizeof(unsigned));
 	}
 
 #ifndef NDEBUG
+	
+	fprintf(stderr, "corssover points : %d %d\n", point1, point2);
+	fprintf(stderr, "gene parts: %d - %d - %d", nbegin, nmiddle, nend);
 
 	for (unsigned i = 0; i < nmiddle; i++)
 	{
@@ -410,14 +407,14 @@ static void *gene_crossover(void *gene1, void *gene2, int n)
 			}
 		}
 	}
+	
+	fprintf(stderr, "end gene_crossover()\n");
 
 #endif
 	
 	memcpy(offspring->features, begin, nbegin*sizeof(unsigned)); 
 	memcpy(offspring->features + nbegin, middle, nmiddle*sizeof(unsigned));
 	memcpy(offspring->features + nbegin + nmiddle, end, nend*sizeof(unsigned));
-		
-	fprintf(stderr, "end gene_crossover()\n");
 	
 	/* House keeping. */
 	free(begin);
