@@ -141,6 +141,8 @@ static double grid_search(double *feature_matrix, double *bestg, double *bestc)
 	const int step = 2;         /* Grid search step.   */
 	double bestacc;             /* Best accuracy.      */
 	
+	fprintf(stderr, "running grid search...     ");
+	
 	/* Sanity check. */
 	assert(feature_matrix != NULL);
 	assert(bestg != NULL);
@@ -199,6 +201,8 @@ static double grid_search(double *feature_matrix, double *bestg, double *bestc)
 	destroy_problem(&prob);
 	free(coefficient_matrix);
 	
+	fprintf(stderr, "[done]\n");
+	
 	return (bestacc);
 }
 
@@ -236,6 +240,8 @@ static double gene_evaluate(void *g)
 	double *feature_matrix; /* Feature matrix.    */
 	unsigned *selected;     /* Selected features. */
 	
+	fprintf(stderr, "building feature matrix... ");
+	
 	/* Sanity check. */
 	assert(g != NULL);
 	
@@ -267,6 +273,8 @@ static double gene_evaluate(void *g)
 		}
 	}
 	
+	fprintf(stderr, "[done]\n");
+	
 	GENE(g)->accuracy =
 		grid_search(feature_matrix, &GENE(g)->gamma, &GENE(g)->cost);
 	
@@ -293,6 +301,8 @@ static void *gene_crossover(void *gene1, void *gene2, int n)
 	struct gene *offspring;         /* Offspring.               */
 	
 	bool trace = false;
+	
+	fprintf(stderr, "running crossover...       ");
 
 	/* Sanity check. */
 	assert(gene1 != NULL);
@@ -407,14 +417,16 @@ static void *gene_crossover(void *gene1, void *gene2, int n)
 	memcpy(offspring->features, begin, nbegin*sizeof(unsigned)); 
 	memcpy(offspring->features + nbegin, middle, nmiddle*sizeof(unsigned));
 	memcpy(offspring->features + nbegin + nmiddle, end, nend*sizeof(unsigned));
+	
+	fprintf(stderr, "[done]\n");
 
 	if (trace)
 	{
 		fprintf(stderr, "corssover points : %d %d\n", point1, point2);
 		fprintf(stderr, "gene parts: %d - %d - %d\n", nbegin, nmiddle, nend);
-		fprintf(stderr, "gene1: ");
+		fprintf(stderr, "gene1:        ");
 		for (unsigned i = 0; i < nselected; i++)
-			fprintf(stderr, "%d        ", GENE(gene1)->features[i]);
+			fprintf(stderr, "%d ", GENE(gene1)->features[i]);
 		fprintf(stderr, "\n");
 		fprintf(stderr, "gene2:        ");
 		for (unsigned i = 0; i < nselected; i++)
@@ -471,7 +483,7 @@ static struct genome problem =
 	0.01,           /* Mutation rate.    */
 	0.65,           /* Crossover rate.   */
 	0.01,           /* Elitism rate.     */
-	0.90,           /* Replacement rate. */
+	1.00,           /* Replacement rate. */
 	gene_random,    /* random().         */
 	gene_evaluate,  /* evaluate().       */
 	gene_crossover, /* crossover().      */
