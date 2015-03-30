@@ -236,8 +236,6 @@ static double gene_evaluate(void *g)
 	double *feature_matrix; /* Feature matrix.    */
 	unsigned *selected;     /* Selected features. */
 	
-	fprintf(stderr, "gene_evaluate()\n");
-	
 	/* Sanity check. */
 	assert(g != NULL);
 	
@@ -294,7 +292,7 @@ static void *gene_crossover(void *gene1, void *gene2, int n)
 	unsigned *begin, *middle, *end; /* Gene parts.              */
 	struct gene *offspring;         /* Offspring.               */
 	
-	fprintf(stderr, "gene_crossover()\n");
+	bool trace = false;
 
 	/* Sanity check. */
 	assert(gene1 != NULL);
@@ -347,9 +345,6 @@ static void *gene_crossover(void *gene1, void *gene2, int n)
 		memcpy(end, GENE(gene2)->features + nbegin + nmiddle, nend*sizeof(unsigned));
 	}
 	
-	fprintf(stderr, "corssover points : %d %d\n", point1, point2);
-	fprintf(stderr, "gene parts: %d - %d - %d", nbegin, nmiddle, nend);
-
 	for (unsigned i = 0; i < nmiddle; i++)
 	{
 		for (unsigned j = 0; j < nbegin; j++)
@@ -363,6 +358,7 @@ static void *gene_crossover(void *gene1, void *gene2, int n)
 				{
 					if (GENE(gene2)->features[k] == begin[j])
 					{
+						trace = true;
 						begin[j] = GENE(gene1)->features[k];
 						break;
 					}
@@ -371,6 +367,7 @@ static void *gene_crossover(void *gene1, void *gene2, int n)
 				{
 					if (GENE(gene1)->features[k] == begin[j])
 					{
+						trace = true;
 						begin[j] = GENE(gene2)->features[k];
 						break;
 					}
@@ -388,6 +385,7 @@ static void *gene_crossover(void *gene1, void *gene2, int n)
 					{
 						if (GENE(gene2)->features[k] == end[j])
 						{
+							trace = true;
 							end[j] = GENE(gene1)->features[k];
 							break;
 						}
@@ -396,6 +394,7 @@ static void *gene_crossover(void *gene1, void *gene2, int n)
 					{
 						if (GENE(gene1)->features[k] == end[j])
 						{
+							trace = true;
 							end[j] = GENE(gene2)->features[k];
 							break;
 						}
@@ -405,23 +404,27 @@ static void *gene_crossover(void *gene1, void *gene2, int n)
 		}
 	}
 	
-	fprintf(stderr, "end gene_crossover()\n");
-	
 	memcpy(offspring->features, begin, nbegin*sizeof(unsigned)); 
 	memcpy(offspring->features + nbegin, middle, nmiddle*sizeof(unsigned));
 	memcpy(offspring->features + nbegin + nmiddle, end, nend*sizeof(unsigned));
 
-	fprintf(stderr, "gene1: ");
-	for (unsigned i = 0; i < nselected; i++)
-		fprintf(stderr, "%d ", GENE(gene1)->features[i]);
-	fprintf(stderr, "\n");
-	fprintf(stderr, "gene2: ");
-	for (unsigned i = 0; i < nselected; i++)
-		fprintf(stderr, "%d ", GENE(gene2)->features[i]);
-	fprintf(stderr, "\n");
-	for (unsigned i = 0; i < nselected; i++)
-		fprintf(stderr, "%d ", offspring->features[i]);
-	fprintf(stderr, "\n");
+	if (trace)
+	{
+		fprintf(stderr, "corssover points : %d %d\n", point1, point2);
+		fprintf(stderr, "gene parts: %d - %d - %d\n", nbegin, nmiddle, nend);
+		fprintf(stderr, "gene1: ");
+		for (unsigned i = 0; i < nselected; i++)
+			fprintf(stderr, "%d        ", GENE(gene1)->features[i]);
+		fprintf(stderr, "\n");
+		fprintf(stderr, "gene2:        ");
+		for (unsigned i = 0; i < nselected; i++)
+			fprintf(stderr, "%d ", GENE(gene2)->features[i]);
+		fprintf(stderr, "\n");
+		fprintf(stderr, "offspring %d: ", n);
+		for (unsigned i = 0; i < nselected; i++)
+			fprintf(stderr, "%d ", offspring->features[i]);
+		fprintf(stderr, "\n");
+	}
 	
 	/* House keeping. */
 	free(begin);
