@@ -346,8 +346,6 @@ static void *gene_crossover(void *gene1, void *gene2, int n)
 		memcpy(middle, GENE(gene1)->features + nbegin, nmiddle*sizeof(unsigned));
 		memcpy(end, GENE(gene2)->features + nbegin + nmiddle, nend*sizeof(unsigned));
 	}
-
-#ifndef NDEBUG
 	
 	fprintf(stderr, "corssover points : %d %d\n", point1, point2);
 	fprintf(stderr, "gene parts: %d - %d - %d", nbegin, nmiddle, nend);
@@ -408,12 +406,22 @@ static void *gene_crossover(void *gene1, void *gene2, int n)
 	}
 	
 	fprintf(stderr, "end gene_crossover()\n");
-
-#endif
 	
 	memcpy(offspring->features, begin, nbegin*sizeof(unsigned)); 
 	memcpy(offspring->features + nbegin, middle, nmiddle*sizeof(unsigned));
 	memcpy(offspring->features + nbegin + nmiddle, end, nend*sizeof(unsigned));
+
+	fprintf(stderr, "gene1: ");
+	for (unsigned i = 0; i < nselected; i++)
+		fprintf(stderr, "%d ", GENE(gene1)->features[i]);
+	fprintf(stderr, "\n");
+	fprintf(stderr, "gene2: ");
+	for (unsigned i = 0; i < nselected; i++)
+		fprintf(stderr, "%d ", GENE(gene2)->features[i]);
+	fprintf(stderr, "\n");
+	for (unsigned i = 0; i < nselected; i++)
+		fprintf(stderr, "%d ", offspring->features[i]);
+	fprintf(stderr, "\n");
 	
 	/* House keeping. */
 	free(begin);
