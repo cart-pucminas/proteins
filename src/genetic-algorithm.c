@@ -292,8 +292,8 @@ static void *gene_crossover(void *gene1, void *gene2, int n)
 	unsigned *begin, *middle, *end; /* Gene parts.              */
 	struct gene *offspring;         /* Offspring.               */
 
-	#pragma omp threadprivate(point1);
-	#pragma omp threadprivate(point2);
+	#pragma omp threadprivate(point1)
+	#pragma omp threadprivate(point2)
 
 	/* Sanity check. */
 	assert(gene1 != NULL);
@@ -470,8 +470,8 @@ void predict(int popsize, int ngen)
 	if (nthreads == 0)
 		nthreads = 1;
 	
-	omp_set_nested();
-	set_nthreads();
+	omp_set_nested(1);
+	set_nthreads(nthreads);
 	
 	genetic_algorithm(&problem, popsize, ngen, 0
 					| GA_OPTIONS_STATISTICS);

@@ -33,6 +33,15 @@
 	 * @defgroup Utility Utility
 	 */
 	/**@{*/
+	
+	/**
+	 * @name Thread Management
+	 */
+	/**@{*/
+	extern void set_nthreads(unsigned);
+	/**@}*/
+	
+	extern unsigned nthreads;
 
 	/**
 	 * @name Error Reporting
