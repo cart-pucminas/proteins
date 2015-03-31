@@ -141,8 +141,6 @@ static double grid_search(double *feature_matrix, double *bestg, double *bestc)
 	const int step = 2;         /* Grid search step.   */
 	double bestacc;             /* Best accuracy.      */
 	
-	fprintf(stderr, "running grid search...     ");
-	
 	/* Sanity check. */
 	assert(feature_matrix != NULL);
 	assert(bestg != NULL);
@@ -152,7 +150,7 @@ static double grid_search(double *feature_matrix, double *bestg, double *bestc)
 	
 	coefficient_matrix = smalloc(nproteins*NCOEFFICIENTS*sizeof(double));
 
-	#pragma omp parallel default(shared)
+	#pragma omp parallel default(shared) num_threads(4)
 	{
 		/* Build coefficient matrix. */
 		#pragma omp for schedule(static)
@@ -201,8 +199,6 @@ static double grid_search(double *feature_matrix, double *bestg, double *bestc)
 	destroy_problem(&prob);
 	free(coefficient_matrix);
 	
-	fprintf(stderr, "[done]\n");
-	
 	return (bestacc);
 }
 
@@ -240,8 +236,6 @@ static double gene_evaluate(void *g)
 	double *feature_matrix; /* Feature matrix.    */
 	unsigned *selected;     /* Selected features. */
 	
-	fprintf(stderr, "building feature matrix... ");
-	
 	/* Sanity check. */
 	assert(g != NULL);
 	
@@ -273,8 +267,6 @@ static double gene_evaluate(void *g)
 		}
 	}
 	
-	fprintf(stderr, "[done]\n");
-	
 	GENE(g)->accuracy =
 		grid_search(feature_matrix, &GENE(g)->gamma, &GENE(g)->cost);
 	
@@ -299,10 +291,9 @@ static void *gene_crossover(void *gene1, void *gene2, int n)
 	unsigned nbegin, nmiddle, nend; /* Size of gene parts.      */
 	unsigned *begin, *middle, *end; /* Gene parts.              */
 	struct gene *offspring;         /* Offspring.               */
-	
-	bool trace = false;
-	
-	fprintf(stderr, "running crossover...       ");
+
+	#pragma omp threadprivate(point1);
+	#pragma omp threadprivate(point2);
 
 	/* Sanity check. */
 	assert(gene1 != NULL);
@@ -368,7 +359,6 @@ static void *gene_crossover(void *gene1, void *gene2, int n)
 				{
 					if (GENE(gene2)->features[k] == begin[j])
 					{
-						trace = true;
 						begin[j] = GENE(gene1)->features[k];
 						break;
 					}
@@ -377,7 +367,6 @@ static void *gene_crossover(void *gene1, void *gene2, int n)
 				{
 					if (GENE(gene1)->features[k] == begin[j])
 					{
-						trace = true;
 						begin[j] = GENE(gene2)->features[k];
 						break;
 					}
@@ -395,7 +384,6 @@ static void *gene_crossover(void *gene1, void *gene2, int n)
 					{
 						if (GENE(gene2)->features[k] == end[j])
 						{
-							trace = true;
 							end[j] = GENE(gene1)->features[k];
 							break;
 						}
@@ -404,7 +392,6 @@ static void *gene_crossover(void *gene1, void *gene2, int n)
 					{
 						if (GENE(gene1)->features[k] == end[j])
 						{
-							trace = true;
 							end[j] = GENE(gene2)->features[k];
 							break;
 						}
@@ -417,26 +404,6 @@ static void *gene_crossover(void *gene1, void *gene2, int n)
 	memcpy(offspring->features, begin, nbegin*sizeof(unsigned)); 
 	memcpy(offspring->features + nbegin, middle, nmiddle*sizeof(unsigned));
 	memcpy(offspring->features + nbegin + nmiddle, end, nend*sizeof(unsigned));
-	
-	fprintf(stderr, "[done]\n");
-
-	if (trace)
-	{
-		fprintf(stderr, "corssover points : %d %d\n", point1, point2);
-		fprintf(stderr, "gene parts: %d - %d - %d\n", nbegin, nmiddle, nend);
-		fprintf(stderr, "gene1:        ");
-		for (unsigned i = 0; i < nselected; i++)
-			fprintf(stderr, "%d ", GENE(gene1)->features[i]);
-		fprintf(stderr, "\n");
-		fprintf(stderr, "gene2:        ");
-		for (unsigned i = 0; i < nselected; i++)
-			fprintf(stderr, "%d ", GENE(gene2)->features[i]);
-		fprintf(stderr, "\n");
-		fprintf(stderr, "offspring %d: ", n);
-		for (unsigned i = 0; i < nselected; i++)
-			fprintf(stderr, "%d ", offspring->features[i]);
-		fprintf(stderr, "\n");
-	}
 	
 	/* House keeping. */
 	free(begin);
@@ -496,6 +463,16 @@ static struct genome problem =
  */
 void predict(int popsize, int ngen)
 {
+	unsigned nthreads;
+	
+	/* Set number of threads. */
+	nthreads = omp_get_num_procs()/4;
+	if (nthreads == 0)
+		nthreads = 1;
+	
+	omp_set_nested();
+	set_nthreads();
+	
 	genetic_algorithm(&problem, popsize, ngen, 0
 					| GA_OPTIONS_STATISTICS);
 }
