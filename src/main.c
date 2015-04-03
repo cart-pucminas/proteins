@@ -18,9 +18,13 @@
  * along with Predict. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <mylib/util.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
+#include <string.h>
+#include <omp.h>
+
+#include <mylib/util.h>
 #include "predict.h"
 	
 
@@ -29,8 +33,11 @@ static const char **filenames = NULL; /* Name of input files.              */
 unsigned nproteins = 0;               /* Number of proteins (input files). */
 unsigned nfeatures = 0;               /* Number of features.               */
 unsigned nselected = 0;               /* Number of selected features.      */
-static unsigned popsize = 0;          /* Population size.                  */
-static unsigned ngen = 0;             /* Number of generations.            */
+static unsigned popsize = 10;         /* Population size.                  */
+static unsigned ngen = 50;            /* Number of generations.            */
+static unsigned _nthreads = 1;        /* Number of threads.                */
+bool nested_threads = false;          /* Enable nested threads?            */
+bool verbose = false;                 /* Be verbose?                       */
 
 /**
  * @brief Database.
@@ -43,11 +50,22 @@ extern void predict(int popsize, int ngen);
 /**
  * @brief Prints program usage and exits.
  * 
- * @details Prints program usage and exits.
+ * @details Prints program usage and exits gracefully.
  */
 static void usage(void)
 {
-	printf("Usage: predict <nfeatures> <nselected> <popsize> <ngen> <protein files>");
+	printf("Usage: predict [options] --nfeatures <num> --nselected \
+												<num> --proteins <files>\n");
+	printf("Brief: selects the best features to determine the class of \
+															a new protein\n");
+	printf("Options:\n");
+	printf("  --help           Display this information exit\n");
+	printf("  --nested-threads Enable nested threads\n");
+	printf("  --popsize <num>  Population size\n");
+	printf("  --ngen <num>     Number of generations to evolve\n");
+	printf("  --nthreads <num> Number of threads to use\n");
+	printf("  --verbose        Be verbose\n");
+	
 	exit(EXIT_SUCCESS);
 }
 
@@ -60,24 +78,99 @@ static void usage(void)
  */
 static void readargs(int argc, char **argv)
 {
-	/* Missing arguments. */
-	if (argc < 6)
-		usage();
+	enum parsing_states {
+		STATE_READ_ARG,      /* Read argument.                   */
+		STATE_SET_NTHREADS,  /* Set number of threads.           */
+		STATE_SET_NFEATURES, /* Set number of features.          */
+		STATE_SET_NSELECTED, /* Set number of selected features. */
+		STATE_SET_PROTEINS,  /* Set protein files.               */
+		STATE_SET_POPSIZE,   /* Set population size.             */
+		STATE_SET_NGEN       /* Set number of generations.       */
+	};
 	
-	nfeatures = atoi(argv[1]);
-	nselected = atoi(argv[2]);
-	popsize = atoi(argv[3]);
-	ngen = atoi(argv[4]);
+	int state;
 	
-	/* Count the number of proteins. */
-	for (unsigned i = 5; argv[i] != NULL; i++)
-		nproteins++;
+	/* Parse command line parameters. */
+	state = STATE_READ_ARG;
+	for (int i = 0; i < argc; i++)
+	{
+		char *arg = argv[i];
 		
-	filenames = smalloc(nproteins*sizeof(char *));
-	
-	/* Extract protein files. */
-	for (unsigned i = 0; i < nproteins; i++)
-		filenames[i] = argv[5 + i];
+		/* Set value. */
+		if (state != STATE_READ_ARG)
+		{
+			switch (state)
+			{
+				/* Set number of threads. */
+				case STATE_SET_NTHREADS:
+					_nthreads = atoi(arg);
+					state = STATE_READ_ARG;
+					break;
+					
+				/* Set number of features. */	
+				case STATE_SET_NFEATURES:
+					nfeatures = atoi(arg);
+					state = STATE_READ_ARG;
+					break;
+				
+				/* Set number of selected features. */
+				case STATE_SET_NSELECTED:
+					nselected = atoi(arg);
+					state = STATE_READ_ARG;
+					break;
+				
+				/* Set protein files. */
+				case STATE_SET_PROTEINS:
+					for (int j = i; argv[j] != NULL; j++)
+						nproteins++;
+					filenames = smalloc(nproteins*sizeof(char *));
+					for (unsigned j = 0; j < nproteins; j++)
+						filenames[j] = argv[i + j];
+					i = argc;
+					break;
+				
+				/* Set population size. */
+				case STATE_SET_POPSIZE:
+					popsize = atoi(arg);
+					state = STATE_READ_ARG;
+					break;
+				
+				/* Set number of generations to evolve. */
+				case STATE_SET_NGEN:
+					ngen = atoi(arg);
+					state = STATE_READ_ARG;
+					break;
+				
+				/* Wrong usage. */
+				default:
+					usage();
+			}
+			
+			continue;
+		}
+		
+		/* Parse argument. */
+		if (!strcmp(arg, "--help"))
+			usage();
+		else if (!strcmp(arg, "--nthreads"))
+			state = STATE_SET_NTHREADS;
+		else if(!strcmp(arg, "--nested-threads"))
+			nested_threads = true;
+		else if (!strcmp(arg, "--nfeatures"))
+			state = STATE_SET_NFEATURES;
+		else if (!strcmp(arg, "--popsize"))
+			state = STATE_SET_POPSIZE;
+		else if (!strcmp(arg, "--ngen"))
+			state = STATE_SET_NGEN;
+		else if (!strcmp(arg, "--nselected"))
+			state = STATE_SET_NSELECTED;
+		else if (!strcmp(arg, "--nselected"))
+			state = STATE_SET_NFEATURES;
+		else if (!strcmp(arg, "--proteins"))
+			state = STATE_SET_PROTEINS;
+		else if (!strcmp(arg, "--verbose"))
+			verbose = true;
+	}
 	
 	/* Assert program parameters. */
 	if (nfeatures == 0)
@@ -88,29 +181,31 @@ static void readargs(int argc, char **argv)
 		error("invalid population size");
 	else if (ngen == 0)
 		error("invalid number of generations");
+	else if (_nthreads == 0)
+		error("invalid number of threads");
+	else if (nproteins == 0)
+		error("invalid number of proteins");
 }
 
 int main(int argc, char **argv)
 {
 	readargs(argc, argv);
 	
+	/* Initialization. */
+	set_nthreads(_nthreads);
+	omp_set_nested(nested_threads);
 	database.naminoacids = smalloc(nproteins*sizeof(unsigned));
 	
+	/* Parse database. */
 	fprintf(stderr, "info: parsing database...\n");
-	
-	/*
-	 * Parse database in order to determine the largest
-	 * number of amino acids among all proteins.
-	 */
 	database_parse(filenames, nproteins);
 	
-	fprintf(stderr, "info: reading database...\n");
-	
 	/* Read database. */
+	fprintf(stderr, "info: reading database...\n");
 	database_read(filenames, nproteins, nfeatures);
 	
+	/* Predict features. */
 	fprintf(stderr, "info: predcting...\n");
-	
 	predict(popsize, ngen);
 	
 	/* House keeping. */

@@ -30,6 +30,13 @@
 #include <math.h>
 #include "predict.h"
 
+/**
+ * @brief Number of nested threads.
+ */
+#ifndef NTHREADS_NESTED
+	#define NTHREADS_NESTED 2
+#endif
+
 
 /**
  * @brief Number of coefficients.
@@ -150,8 +157,8 @@ static double grid_search(double *feature_matrix, double *bestg, double *bestc)
 	
 	coefficient_matrix = smalloc(nproteins*NCOEFFICIENTS*sizeof(double));
 
-	#pragma omp parallel default(shared) num_threads(4)
-	{
+	#pragma omp parallel default(shared) num_threads(NTHREADS_NESTED)
+	{		
 		/* Build coefficient matrix. */
 		#pragma omp for schedule(static)
 		for (unsigned wprotein = 0; wprotein < nproteins; wprotein++)
@@ -163,7 +170,13 @@ static double grid_search(double *feature_matrix, double *bestg, double *bestc)
 		}
 		
 		#pragma omp master
-		buildProblem(database.labels, nproteins, coefficient_matrix, &prob, NCOEFFICIENTS);
+		{
+			buildProblem(database.labels,
+				nproteins,
+				coefficient_matrix,
+				&prob,
+				NCOEFFICIENTS);
+		}
 		#pragma omp barrier
 
 		/* Search parameters. */
@@ -463,16 +476,5 @@ static struct genome problem =
  */
 void predict(int popsize, int ngen)
 {
-	unsigned nthreads;
-	
-	/* Set number of threads. */
-	nthreads = omp_get_num_procs()/4;
-	if (nthreads == 0)
-		nthreads = 1;
-	
-	omp_set_nested(1);
-	set_nthreads(nthreads);
-	
-	genetic_algorithm(&problem, popsize, ngen, 0
-					| GA_OPTIONS_STATISTICS);
+	genetic_algorithm(&problem, popsize, ngen, GA_OPTIONS_STATISTICS);
 }

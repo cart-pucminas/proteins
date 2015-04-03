@@ -21,6 +21,8 @@
 #ifndef PREDICT_H_
 #define PREDICT_H_
 
+	#include <stdbool.h>
+
 	#include <libsvm/svm.h>
 
 	/**
@@ -48,6 +50,9 @@
 	extern unsigned nproteins;
 	extern unsigned nfeatures;
 	extern unsigned nselected;
+	
+	extern bool nested_threads;
+	extern bool verbose;
 	extern struct database database;
 
 #endif /* PREDICT_H_ */
