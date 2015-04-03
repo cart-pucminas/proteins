@@ -50,7 +50,6 @@
 	extern unsigned nproteins;
 	extern unsigned nfeatures;
 	extern unsigned nselected;
-	
 	extern bool nested_threads;
 	extern bool verbose;
 	extern struct database database;

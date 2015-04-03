@@ -23,10 +23,10 @@
 #include <stdbool.h>
 #include <string.h>
 #include <omp.h>
+#include <time.h>
 
 #include <mylib/util.h>
 #include "predict.h"
-	
 
 /* Program parameters. */
 static const char **filenames = NULL; /* Name of input files.              */
@@ -35,7 +35,7 @@ unsigned nfeatures = 0;               /* Number of features.               */
 unsigned nselected = 0;               /* Number of selected features.      */
 static unsigned popsize = 10;         /* Population size.                  */
 static unsigned ngen = 50;            /* Number of generations.            */
-static unsigned _nthreads = 1;        /* Number of threads.                */
+static unsigned nthreads = 1;         /* Number of threads.                */
 bool nested_threads = false;          /* Enable nested threads?            */
 bool verbose = false;                 /* Be verbose?                       */
 
@@ -103,7 +103,7 @@ static void readargs(int argc, char **argv)
 			{
 				/* Set number of threads. */
 				case STATE_SET_NTHREADS:
-					_nthreads = atoi(arg);
+					nthreads = atoi(arg);
 					state = STATE_READ_ARG;
 					break;
 					
@@ -181,7 +181,7 @@ static void readargs(int argc, char **argv)
 		error("invalid population size");
 	else if (ngen == 0)
 		error("invalid number of generations");
-	else if (_nthreads == 0)
+	else if (nthreads == 0)
 		error("invalid number of threads");
 	else if (nproteins == 0)
 		error("invalid number of proteins");
@@ -192,7 +192,8 @@ int main(int argc, char **argv)
 	readargs(argc, argv);
 	
 	/* Initialization. */
-	set_nthreads(_nthreads);
+	srandnum(time(NULL));
+	set_nthreads(nthreads);
 	omp_set_nested(nested_threads);
 	database.naminoacids = smalloc(nproteins*sizeof(unsigned));
 	
