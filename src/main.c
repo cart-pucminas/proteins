@@ -198,15 +198,15 @@ int main(int argc, char **argv)
 	database.naminoacids = smalloc(nproteins*sizeof(unsigned));
 	
 	/* Parse database. */
-	fprintf(stderr, "info: parsing database...\n");
+	info("parsing database...", VERBOSE_INFO);
 	database_parse(filenames, nproteins);
 	
 	/* Read database. */
-	fprintf(stderr, "info: reading database...\n");
+	info("reading database...", VERBOSE_INFO);
 	database_read(filenames, nproteins, nfeatures);
 	
 	/* Predict features. */
-	fprintf(stderr, "info: predcting...\n");
+	info("predcting...", VERBOSE_INFO);
 	predict(popsize, ngen);
 	
 	/* House keeping. */
