@@ -54,8 +54,8 @@ extern void predict(int popsize, int ngen);
  */
 static void usage(void)
 {
-	printf("Usage: predict [options] --nfeatures <num> --nselected \
-												<num> --proteins <files>\n");
+	printf("Usage: predict [options]");
+	printf("--nfeatures <num> --nselected <num> --proteins <files>\n");
 	printf("Brief: selects the best features to determine the class of \
 															a new protein\n");
 	printf("Options:\n");
