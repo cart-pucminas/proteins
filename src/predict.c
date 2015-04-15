@@ -476,5 +476,19 @@ static struct genome problem =
  */
 void predict(int popsize, int ngen)
 {
-	genetic_algorithm(&problem, popsize, ngen, GA_OPTIONS_STATISTICS);
+	struct gene *best;
+	
+	best = genetic_algorithm(&problem, popsize, ngen, GA_OPTIONS_STATISTICS);
+	
+	/* Output best gene. */
+	printf("accuracy: %lf\n", best->accuracy);
+	printf("cost:     %lf\n", best->cost);
+	printf("gamma:    %lf\n", best->gamma);
+	printf("features:\n  ");
+	for (unsigned i = 0; i < nselected; i++)
+		printf("%u ", best->features[i]);
+	printf("\n");
+	
+	/* House keeping. */
+	gene_destroy(best);
 }
