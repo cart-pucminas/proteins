@@ -56,8 +56,8 @@ static void usage(void)
 {
 	printf("Usage: predict [options]");
 	printf("--nfeatures <num> --nselected <num> --proteins <files>\n");
-	printf("Brief: selects the best features to determine the class of \
-															a new protein\n");
+	printf("Brief:");
+	printf("selects the best features to determine the class of a protein\n");
 	printf("Options:\n");
 	printf("  --help           Display this information exit\n");
 	printf("  --nested-threads Enable nested threads\n");
