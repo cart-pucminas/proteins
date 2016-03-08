@@ -8,17 +8,12 @@
 .PHONY: libsvm
 
 # Builds everything.
-all: mylib libsvm
+all: libsvm
 
-# Builds My C Library.
-mylib:
-	cd mylib/ && $(MAKE) install PREFIX=$(CURDIR)/..
-	
 # Builds SVM library.
 libsvm:
 	cd libsvm/ && $(MAKE) all
 
 # Cleans compilation files.
 clean:
-	cd mylib/ && $(MAKE) uninstall PREFIX=$(CURDIR)/..
 	cd libsvm/ && $(MAKE) clean

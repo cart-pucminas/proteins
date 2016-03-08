@@ -451,6 +451,20 @@ static void *gene_mutation(void *g)
 	return (g);
 }
 
+/**
+ * @brief Testes if two genes are equal.
+ * 
+ * @param g1 First gene.
+ * @param g2 Second gene.
+ * 
+ * @returns One if the genes are equal and zero otherwise.
+ */
+static int gene_equal(gene_t g1, gene_t g2)
+{
+	return (!memcmp(GENE(g1)->features, GENE(g2)->features,
+												nfeatures*sizeof(unsigned)));
+}
+
 /*============================================================================*
  *                              Genetic Operators                             *
  *============================================================================*/
@@ -464,11 +478,13 @@ static struct genome problem =
 	0.65,           /* Crossover rate.   */
 	0.01,           /* Elitism rate.     */
 	1.00,           /* Replacement rate. */
+	3,              /* Tournament size.  */
 	gene_random,    /* random().         */
 	gene_evaluate,  /* evaluate().       */
 	gene_crossover, /* crossover().      */
 	gene_mutation,  /* mutation().       */
-	gene_destroy    /* destroy().        */
+	gene_destroy,   /* destroy().        */
+	gene_equal      /* gene_equal()      */
 };
 
 /*
@@ -478,7 +494,11 @@ void predict(int popsize, int ngen)
 {
 	struct gene *best;
 	
-	best = genetic_algorithm(&problem, popsize, ngen, GA_OPTIONS_STATISTICS);
+	best = genetic_algorithm(&problem,
+	                         popsize,
+	                         ngen,
+	                         GA_OPTIONS_STATISTICS
+	                         | GA_OPTIONS_USE_TOURNAMENT);
 	
 	/* Output best gene. */
 	printf("accuracy: %lf\n", best->accuracy);
