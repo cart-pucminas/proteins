@@ -47,6 +47,7 @@
 	extern void destroy_problem(struct svm_problem *);
 	
 	/* Forward definitions. */
+	extern unsigned nthreads;
 	extern unsigned nproteins;
 	extern unsigned nfeatures;
 	extern unsigned nselected;

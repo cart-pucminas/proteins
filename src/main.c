@@ -35,7 +35,7 @@ unsigned nfeatures = 0;               /* Number of features.               */
 unsigned nselected = 0;               /* Number of selected features.      */
 static unsigned popsize = 10;         /* Population size.                  */
 static unsigned ngen = 50;            /* Number of generations.            */
-static unsigned nthreads = 1;         /* Number of threads.                */
+unsigned nthreads = 1;                /* Number of threads.                */
 bool nested_threads = false;          /* Enable nested threads?            */
 bool verbose = false;                 /* Be verbose?                       */
 

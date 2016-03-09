@@ -30,13 +30,6 @@
 #include <math.h>
 #include "predict.h"
 
-/**
- * @brief Number of nested threads.
- */
-#ifndef NTHREADS_NESTED
-	#define NTHREADS_NESTED 2
-#endif
-
 
 /**
  * @brief Number of coefficients.
@@ -157,7 +150,7 @@ static double grid_search(double *feature_matrix, double *bestg, double *bestc)
 	
 	coefficient_matrix = smalloc(nproteins*NCOEFFICIENTS*sizeof(double));
 
-	#pragma omp parallel default(shared) num_threads(NTHREADS_NESTED)
+	#pragma omp parallel default(shared) num_threads(nthreads)
 	{		
 		/* Build coefficient matrix. */
 		#pragma omp for schedule(static)
