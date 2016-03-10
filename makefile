@@ -16,7 +16,7 @@ export SRCDIR     = $(CURDIR)/src
 export MYLIB = mylib-0.7
 export LIBS += $(LIBDIR)/libmy.a
 export LIBS += $(LIBDIR)/libsvm.a
-export LIBS += -lm
+export LIBS += -lm -fopenmp
 
 # Executable name.
 export EXEC = predict

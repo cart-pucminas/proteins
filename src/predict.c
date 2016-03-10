@@ -150,10 +150,7 @@ static double grid_search(double *feature_matrix, double *bestg, double *bestc)
 	
 	coefficient_matrix = smalloc(nproteins*NCOEFFICIENTS*sizeof(double));
 
-	#pragma omp parallel default(shared) num_threads(nthreads)
-	{		
 		/* Build coefficient matrix. */
-		#pragma omp for schedule(static)
 		for (unsigned wprotein = 0; wprotein < nproteins; wprotein++)
 		{
 			dct(&coefficient_matrix[wprotein*NCOEFFICIENTS],
@@ -162,18 +159,13 @@ static double grid_search(double *feature_matrix, double *bestg, double *bestc)
 				NCOEFFICIENTS);
 		}
 		
-		#pragma omp master
-		{
 			buildProblem(database.labels,
 				nproteins,
 				coefficient_matrix,
 				&prob,
 				NCOEFFICIENTS);
-		}
-		#pragma omp barrier
 
 		/* Search parameters. */
-		#pragma omp for schedule(dynamic)
 		for (int cost = -5; cost < 15; cost += step)
 		{
 			double cost2;
@@ -190,7 +182,6 @@ static double grid_search(double *feature_matrix, double *bestg, double *bestc)
 				acc = svm(&prob, cost2, gamma2);
 														
 				/* Best parameters found. */
-				#pragma omp critical
 				if (acc > bestacc)
 				{
 					bestacc = acc; 
@@ -199,7 +190,6 @@ static double grid_search(double *feature_matrix, double *bestg, double *bestc)
 				}
 			}
 		}
-	}
 
 	/* House keeping. */
 	destroy_problem(&prob);
