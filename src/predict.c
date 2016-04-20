@@ -458,10 +458,10 @@ static int gene_equal(gene_t g1, gene_t g2)
 static struct genome problem = 
 {
 	0.01,           /* Mutation rate.    */
-	0.65,           /* Crossover rate.   */
+	0.60,           /* Crossover rate.   */
 	0.01,           /* Elitism rate.     */
 	1.00,           /* Replacement rate. */
-	3,              /* Tournament size.  */
+	0,              /* Tournament size.  */
 	gene_random,    /* random().         */
 	gene_evaluate,  /* evaluate().       */
 	gene_crossover, /* crossover().      */
@@ -480,8 +480,7 @@ void predict(int popsize, int ngen)
 	best = genetic_algorithm(&problem,
 	                         popsize,
 	                         ngen,
-	                         GA_OPTIONS_STATISTICS
-	                         | GA_OPTIONS_USE_TOURNAMENT);
+	                         GA_OPTIONS_STATISTICS);
 	
 	/* Output best gene. */
 	printf("accuracy: %lf\n", best->accuracy);
